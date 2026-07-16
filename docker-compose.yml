@@ -1,0 +1,212 @@
+x-common-env: &common-env
+  JWT_SECRET: ${JWT_SECRET}
+  JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+  RABBITMQ_URL: amqp://rabbitmq:5672
+  AUDIT_SERVICE_URL: http://audit-service:4008
+  NOTIFICATION_SERVICE_URL: http://notification-service:4007
+  CONTRACT_SERVICE_URL: http://contract-service:4002
+  AI_SERVICE_URL: http://ai-service:4003
+  RISK_SERVICE_URL: http://risk-compliance-service:4004
+  BIDDING_SERVICE_URL: http://bidding-service:4009
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: legalai-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: legalai-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672" # management UI: http://localhost:15672 (guest/guest)
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: legalai-gateway
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      <<: *common-env
+      PORT: 4000
+    depends_on:
+      - auth-service
+      - contract-service
+      - ai-service
+      - risk-compliance-service
+      - chat-service
+      - report-service
+      - notification-service
+      - audit-service
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: services/auth-service/Dockerfile
+    container_name: legalai-auth
+    restart: unless-stopped
+    environment:
+      <<: *common-env
+      PORT: 4001
+      MONGO_URI: mongodb://mongo:27017/legalai_auth
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  contract-service:
+    build:
+      context: .
+      dockerfile: services/contract-service/Dockerfile
+    container_name: legalai-contracts
+    restart: unless-stopped
+    environment:
+      <<: *common-env
+      PORT: 4002
+      MONGO_URI: mongodb://mongo:27017/legalai_contracts
+    volumes:
+      - contract_uploads:/app/uploads
+    depends_on:
+      mongo:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  ai-service:
+    build:
+      context: .
+      dockerfile: services/ai-service/Dockerfile
+    container_name: legalai-ai
+    restart: unless-stopped
+    environment:
+      <<: *common-env
+      PORT: 4003
+      MONGO_URI: mongodb://mongo:27017/legalai_ai
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-1.5-flash}
+    depends_on:
+      mongo:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  risk-compliance-service:
+    build:
+      context: .
+      dockerfile: services/risk-compliance-service/Dockerfile
+    container_name: legalai-risk
+    restart: unless-stopped
+    environment:
+      <<: *common-env
+      PORT: 4004
+      MONGO_URI: mongodb://mongo:27017/legalai_risk_compliance
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  chat-service:
+    build:
+      context: .
+      dockerfile: services/chat-service/Dockerfile
+    container_name: legalai-chat
+    restart: unless-stopped
+    environment:
+      <<: *common-env
+      PORT: 4005
+      MONGO_URI: mongodb://mongo:27017/legalai_chat
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  report-service:
+    build:
+      context: .
+      dockerfile: services/report-service/Dockerfile
+    container_name: legalai-reports
+    restart: unless-stopped
+    environment:
+      <<: *common-env
+      PORT: 4006
+    depends_on:
+      - contract-service
+      - risk-compliance-service
+      - audit-service
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    container_name: legalai-notifications
+    restart: unless-stopped
+    environment:
+      <<: *common-env
+      PORT: 4007
+      MONGO_URI: mongodb://mongo:27017/legalai_notifications
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  audit-service:
+    build:
+      context: .
+      dockerfile: services/audit-service/Dockerfile
+    container_name: legalai-audit
+    restart: unless-stopped
+    environment:
+      <<: *common-env
+      PORT: 4008
+      MONGO_URI: mongodb://mongo:27017/legalai_audit
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  bidding-service:
+    build:
+      context: .
+      dockerfile: services/bidding-service/Dockerfile
+    container_name: legalai-bidding
+    restart: unless-stopped
+    ports:
+      - "4009:4009"
+    environment:
+      <<: *common-env
+      PORT: 4009
+      MONGO_URI: mongodb://mongo:27017/?appName=MongoDB+Compass&directConnection=true&serverSelectionTimeoutMS=2000
+      DOCKER_ENV: "true"
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: legalai-frontend
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    depends_on:
+      - gateway
+
+volumes:
+  mongo_data:
+  contract_uploads:

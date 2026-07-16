@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    border-color: theme('colors.ink.border');
+  }
+
+  body {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: theme('colors.seal.DEFAULT');
+    color: theme('colors.ink.DEFAULT');
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-ink-raised border border-ink-border rounded-sm;
+  }
+
+  .btn-primary {
+    @apply bg-seal text-ink font-body font-medium px-4 py-2 rounded-sm hover:bg-seal-bright transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply border border-ink-border text-paper font-body px-4 py-2 rounded-sm hover:border-seal transition-colors disabled:opacity-50;
+  }
+
+  .input-field {
+    @apply w-full bg-ink border border-ink-border rounded-sm px-3 py-2 text-paper placeholder-muted font-body focus:outline-none focus:ring-1 focus:ring-seal focus:border-seal transition-colors;
+  }
+
+  .docket-number {
+    @apply font-mono text-xs text-muted tracking-wider;
+  }
+}
+
+@layer utilities {
+
+  /* Slide panel transition */
+  .duration-350 {
+    transition-duration: 350ms;
+  }
+
+  .transition-350 {
+    transition-property: all;
+    transition-duration: 350ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Thin scrollbars */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.ink.border') transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: theme('colors.ink.border');
+    border-radius: 3px;
+  }
+
+  /* Audit new-entry flash */
+  @keyframes auditFlash {
+    0% {
+      background-color: rgba(39, 174, 96, 0.12);
+    }
+
+    100% {
+      background-color: transparent;
+    }
+  }
+
+  .audit-new {
+    animation: auditFlash 2.5s ease forwards;
+  }
+
+  /* Typing bounce (for chatbot indicator) */
+  @keyframes typingBounce {
+
+    0%,
+    60%,
+    100% {
+      transform: translateY(0);
+    }
+
+    30% {
+      transform: translateY(-5px);
+    }
+  }
+
+  /* Deadline urgency pulse */
+  @keyframes urgencyPulse {
+
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.55;
+    }
+  }
+
+  .urgency-pulse {
+    animation: urgencyPulse 1.5s ease-in-out infinite;
+  }
+}
+
+/* Print styles for PDF download */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+}
