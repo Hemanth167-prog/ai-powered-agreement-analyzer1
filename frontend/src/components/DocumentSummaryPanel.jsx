@@ -9,21 +9,525 @@ function daysUntil(dateStr) {
   return Math.ceil((d.getTime() - Date.now()) / 86400000);
 }
 
-// ─── PDF HTML builder — used ONLY for Download PDF ───────────────────────
+// ─── PDF HTML builder — constructs a premium single-page document summary ───────────────────
 
-function buildDocumentHTML(report) {
+function buildSinglePageSummaryHTML(report) {
   const { contract, riskReport, complianceReport, analysis } = report;
-  const isBidding = analysis?.contractType === "bidding";
-  const riskColor = { HIGH: "#b2483a", MEDIUM: "#c47d22", LOW: "#2e7d52" }[riskReport?.overallRiskLevel] || "#2e7d52";
+  const risk = riskReport?.overallRiskLevel || "LOW";
+  const riskColor = { HIGH: "#ef4444", MEDIUM: "#f59e0b", LOW: "#10b981" }[risk] || "#10b981";
+  const riskBg = { HIGH: "#fef2f2", MEDIUM: "#fffbeb", LOW: "#ecfdf5" }[risk] || "#ecfdf5";
+  const complianceStatus = complianceReport?.isCompliant !== false ? "COMPLIANT" : "ISSUES DETECTED";
+  const complianceColor = complianceReport?.isCompliant !== false ? "#10b981" : "#ef4444";
+  const complianceBg = complianceReport?.isCompliant !== false ? "#ecfdf5" : "#fef2f2";
+  
   const esc = (s) => String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-  const clauseRows = (analysis?.clauses || []).map((c) => `<div class="item"><span class="tag">${esc(c.category?.toUpperCase())}</span><strong>${esc(c.title)}</strong><p>${esc(c.text)}</p></div>`).join("");
-  const riskRows = (riskReport?.risks || []).map((r) => `<div class="item risk-item"><span class="tag sev-${r.severity?.toLowerCase()}">${esc(r.severity)}</span><strong>${esc(r.title)}</strong><p>${esc(r.description)}</p></div>`).join("");
-  const complianceRows = (complianceReport?.issues || []).map((i) => `<div class="item"><strong>${esc(i.title)}</strong><p>${esc(i.description)}</p>${i.regulationReference ? `<code>${esc(i.regulationReference)}</code>` : ""}</div>`).join("");
-  const lawRows = (analysis?.corporateLaws || []).map((l) => `<div class="item"><strong>${esc(l.lawName)}</strong><p>${esc(l.description)}</p></div>`).join("");
-  const biddingLawRows = (analysis?.biddingLaws || []).map((l) => `<div class="item"><strong>${esc(l.lawName)}</strong><p>${esc(l.description)}</p></div>`).join("");
-  const biddingReqRows = (analysis?.biddingRequirements || []).map((r) => `<div class="item"><strong>${esc(r.title)}</strong><p>${esc(r.description)}</p></div>`).join("");
   const now = new Date().toLocaleString("en-IN", { dateStyle: "long", timeStyle: "short" });
-  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><title>${esc(contract.fileName)}</title><style>*,*::before,*::after{box-sizing:border-box;}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a202c;background:#fff;margin:0;padding:0;font-size:12.5px;line-height:1.65;}.page{max-width:800px;margin:0 auto;padding:52px 56px;}.doc-header{border-bottom:3px solid #B8863B;padding-bottom:22px;margin-bottom:30px;}h1{font-family:Georgia,serif;font-size:24px;color:#0f172a;margin:0 0 6px;}.header-sub{font-size:12px;color:#64748b;margin:0 0 12px;font-family:monospace;}.meta-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}.meta-pill{font-family:monospace;font-size:10px;background:#f8fafc;border:1px solid #e2e8f0;padding:3px 10px;border-radius:3px;color:#475569;}.risk-badge{display:inline-block;padding:5px 16px;border-radius:4px;font-family:monospace;font-size:11px;font-weight:700;color:#fff;background:${riskColor};}h2{font-family:Georgia,serif;font-size:16px;color:#0f172a;border-bottom:1.5px solid #e5e7eb;padding-bottom:5px;margin:30px 0 14px;}.item{border-left:3px solid #B8863B;padding:8px 0 8px 14px;margin-bottom:10px;}.item strong{display:block;color:#0f172a;font-size:13px;margin:2px 0 3px;}.item p{margin:0;color:#4b5563;font-size:11.5px;}.tag{display:inline-block;font-size:9.5px;font-family:monospace;padding:2px 8px;border-radius:3px;margin-bottom:5px;background:#fef3c7;color:#92400e;}.risk-item{border-left-color:#dc2626;}.sev-high{background:#fee2e2;color:#991b1b;}.sev-medium{background:#fef3c7;color:#92400e;}.sev-low{background:#dcfce7;color:#166534;}code{display:block;font-family:monospace;font-size:10px;color:#475569;margin-top:4px;background:#f8fafc;padding:3px 8px;border-radius:3px;}.compliance-status{display:inline-block;font-family:monospace;font-size:11px;padding:4px 14px;border-radius:3px;margin-bottom:14px;font-weight:600;}.compliant{background:#dcfce7;color:#166534;}.non-compliant{background:#fee2e2;color:#991b1b;}.summary-text{font-size:13.5px;line-height:1.8;color:#374151;white-space:pre-wrap;}.footer{margin-top:40px;padding-top:14px;border-top:1px solid #e5e7eb;font-size:10px;color:#94a3b8;font-family:monospace;display:flex;justify-content:space-between;}</style></head><body><div class="page"><div class="doc-header"><h1>${esc(contract.fileName)}</h1><p class="header-sub">Legal Analysis Report · Docketwise AI Platform</p><div class="meta-row"><span class="meta-pill">User: ${esc(contract.userCountry)}</span><span class="meta-pill">Employer: ${esc(contract.employerCountry)}</span>${contract.clientCountry ? `<span class="meta-pill">Client: ${esc(contract.clientCountry)}</span>` : ""}<span class="meta-pill">Type: ${esc(analysis?.contractType || "Standard")}</span><span class="meta-pill">Generated: ${esc(now)}</span></div><div style="margin-top:12px;"><span class="risk-badge">RISK: ${esc(riskReport?.overallRiskLevel || "LOW")}</span></div></div><h2>Executive Summary</h2><p class="summary-text">${esc(analysis?.summary || "No summary available.")}</p>${clauseRows ? `<h2>Contract Clauses</h2>${clauseRows}` : ""}<h2>Risk Assessment</h2><div style="margin-bottom:12px;"><span class="risk-badge">Overall: ${esc(riskReport?.overallRiskLevel || "LOW")}</span></div>${riskRows || "<p style='color:#94a3b8;font-style:italic;'>No risks flagged.</p>"}<h2>Compliance</h2><div class="compliance-status ${complianceReport?.isCompliant !== false ? "compliant" : "non-compliant"}">${complianceReport?.isCompliant !== false ? "COMPLIANT" : "COMPLIANCE ISSUES DETECTED"}</div>${complianceRows || "<p style='color:#94a3b8;font-style:italic;'>No compliance issues.</p>"}${lawRows ? `<h2>Corporate Laws</h2>${lawRows}` : ""}${isBidding ? `<h2>Bidding Laws</h2>${biddingLawRows || "<p>None.</p>"}<h3>Requirements</h3>${biddingReqRows || "<p>None.</p>"}` : ""}<div class="footer"><span>Docketwise AI Legal Platform</span><span>Generated ${esc(now)}</span></div></div></body></html>`;
+  
+  const totalClauses = analysis?.clauses?.length || 0;
+  const totalRisks = riskReport?.risks?.length || 0;
+  const totalCompliance = complianceReport?.issues?.length || 0;
+
+  return `<style>
+      *, *::before, *::after { box-sizing: border-box; }
+      .pdf-wrapper {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        color: #334155;
+        background: #ffffff;
+        margin: 0;
+        padding: 20px;
+        line-height: 1.5;
+        font-size: 12px;
+        max-width: 720px;
+      }
+      .pdf-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 14px;
+        margin-bottom: 18px;
+      }
+      .header-left h1 {
+        font-family: Georgia, Cambria, "Times New Roman", Times, serif;
+        font-size: 20px;
+        color: #0f172a;
+        margin: 0 0 4px 0;
+        font-weight: 700;
+      }
+      .header-left .subtitle {
+        font-size: 10px;
+        font-family: monospace;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin: 0;
+      }
+      .header-right {
+        text-align: right;
+      }
+      .logo-text {
+        font-family: Georgia, Cambria, serif;
+        font-size: 15px;
+        font-weight: bold;
+        color: #b8863b;
+        margin: 0;
+      }
+      .logo-sub {
+        font-size: 8px;
+        font-family: monospace;
+        color: #94a3b8;
+        margin: 0;
+      }
+      .meta-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        padding: 10px 14px;
+        border-radius: 6px;
+        margin-bottom: 18px;
+      }
+      .meta-item {
+        font-size: 11px;
+        width: 48%;
+      }
+      .meta-item strong {
+        color: #475569;
+        font-family: monospace;
+        font-size: 10px;
+        text-transform: uppercase;
+      }
+      .meta-item span {
+        color: #0f172a;
+        font-weight: 500;
+      }
+      .kpi-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 18px;
+      }
+      .kpi-card {
+        flex: 1;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 8px 10px;
+        text-align: center;
+      }
+      .kpi-title {
+        font-family: monospace;
+        font-size: 9px;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 3px;
+      }
+      .kpi-value {
+        font-size: 12.5px;
+        font-weight: 700;
+      }
+      .summary-section {
+        margin-bottom: 18px;
+      }
+      .summary-section h2 {
+        font-family: Georgia, Cambria, serif;
+        font-size: 14px;
+        color: #0f172a;
+        border-bottom: 1.5px solid #e2e8f0;
+        padding-bottom: 4px;
+        margin: 0 0 8px 0;
+      }
+      .summary-text {
+        font-size: 11.5px;
+        line-height: 1.55;
+        color: #334155;
+        white-space: pre-wrap;
+        margin: 0;
+      }
+      .highlights-section {
+        display: flex;
+        gap: 14px;
+        margin-bottom: 18px;
+      }
+      .highlights-box {
+        flex: 1;
+        border-left: 3px solid #b8863b;
+        padding-left: 10px;
+      }
+      .highlights-box h3 {
+        font-size: 11px;
+        color: #0f172a;
+        margin: 0 0 5px 0;
+        font-family: monospace;
+        text-transform: uppercase;
+      }
+      .highlights-box ul {
+        margin: 0;
+        padding-left: 14px;
+        font-size: 10.5px;
+        color: #475569;
+      }
+      .highlights-box li {
+        margin-bottom: 3px;
+      }
+      .disclaimer {
+        font-size: 9px;
+        color: #94a3b8;
+        background: #f8fafc;
+        border: 1px dashed #cbd5e1;
+        padding: 6px 10px;
+        border-radius: 4px;
+        text-align: center;
+        line-height: 1.35;
+        margin-top: 10px;
+      }
+      .pdf-footer {
+        margin-top: 12px;
+        padding-top: 8px;
+        border-top: 1px solid #e2e8f0;
+        font-size: 8.5px;
+        color: #94a3b8;
+        font-family: monospace;
+        display: flex;
+        justify-content: space-between;
+      }
+    </style>
+    <div class="pdf-wrapper">
+      <div class="pdf-header">
+        <div class="header-left">
+          <h1>Contract Review Summary</h1>
+          <p class="subtitle">Docketwise AI Legal Pipeline</p>
+        </div>
+        <div class="header-right">
+          <p class="logo-text">Docketwise</p>
+          <p class="logo-sub">SECURE CONTRACT SYSTEM</p>
+        </div>
+      </div>
+      
+      <div class="meta-grid">
+        <div class="meta-item">
+          <strong>Document:</strong> <span>${esc(contract.fileName)}</span>
+        </div>
+        <div class="meta-item">
+          <strong>Contract Type:</strong> <span>${esc(analysis?.contractType === "bidding" ? "Bidding / Tender" : "Standard")}</span>
+        </div>
+        <div class="meta-item">
+          <strong>User Country:</strong> <span>${esc(contract.userCountry)}</span>
+        </div>
+        <div class="meta-item">
+          <strong>Employer Country:</strong> <span>${esc(contract.employerCountry)}</span>
+        </div>
+        ${contract.clientCountry ? `
+          <div class="meta-item">
+            <strong>Client Country:</strong> <span>${esc(contract.clientCountry)}</span>
+          </div>
+        ` : ""}
+        <div class="meta-item">
+          <strong>Scan Date:</strong> <span>${esc(now)}</span>
+        </div>
+      </div>
+      
+      <div class="kpi-row">
+        <div class="kpi-card" style="background-color: ${riskBg}; border-color: ${riskColor}30;">
+          <div class="kpi-title">Overall Risk</div>
+          <div class="kpi-value" style="color: ${riskColor};">${esc(risk)}</div>
+        </div>
+        <div class="kpi-card" style="background-color: ${complianceBg}; border-color: ${complianceColor}30;">
+          <div class="kpi-title">Compliance Status</div>
+          <div class="kpi-value" style="color: ${complianceColor};">${esc(complianceStatus)}</div>
+        </div>
+        <div class="kpi-card" style="background-color: #f8fafc;">
+          <div class="kpi-title">Downstream Metrics</div>
+          <div class="kpi-value" style="color: #475569; font-size: 10.5px; font-weight: normal; line-height: 1.25; margin-top: 1px;">
+            ${totalClauses} Clauses Extracted<br/>
+            ${totalRisks} Risk Flags • ${totalCompliance} Issues
+          </div>
+        </div>
+      </div>
+      
+      <div class="summary-section">
+        <h2>Executive Summary</h2>
+        <p class="summary-text">${esc(analysis?.summary || "No summary available.")}</p>
+      </div>
+      
+      <div class="highlights-section">
+        <div class="highlights-box">
+          <h3>Key Risks Flagged</h3>
+          ${riskReport?.risks?.length > 0 ? `
+            <ul>
+              ${riskReport.risks.slice(0, 4).map(r => `<li><strong>${esc(r.title)}</strong> (${esc(r.severity)})</li>`).join("")}
+              ${riskReport.risks.length > 4 ? `<li>And ${riskReport.risks.length - 4} other risk flags...</li>` : ""}
+            </ul>
+          ` : `<p style="font-size: 10px; margin: 0; color: #64748b; font-style: italic;">No risks flagged.</p>`}
+        </div>
+        <div class="highlights-box" style="border-left-color: #10b981;">
+          <h3>Compliance Checks</h3>
+          ${complianceReport?.issues?.length > 0 ? `
+            <ul>
+              ${complianceReport.issues.slice(0, 4).map(i => `<li><strong>${esc(i.title)}</strong></li>`).join("")}
+              ${complianceReport.issues.length > 4 ? `<li>And ${complianceReport.issues.length - 4} other issues...</li>` : ""}
+            </ul>
+          ` : `<p style="font-size: 10px; margin: 0; color: #64748b; font-style: italic;">No compliance issues detected.</p>`}
+        </div>
+      </div>
+      
+      <div class="disclaimer">
+        <strong>Legal Disclaimer:</strong> This document summary is generated automatically by the Docketwise AI platform. It is designed to assist in contract reviews and does not constitute formal legal advice. Please consult with a qualified attorney to review the full agreement before execution.
+      </div>
+      
+      <div class="pdf-footer">
+        <span>Docketwise Legal Tech Platform</span>
+        <span>Generated on ${esc(now)}</span>
+      </div>
+    </div>`;
+}
+
+// ─── Word HTML builder — constructs a MS Word compatible document ───────────────────
+function buildWordHTML(report) {
+  const { contract, riskReport, complianceReport, analysis } = report;
+  const risk = riskReport?.overallRiskLevel || "LOW";
+  const complianceStatus = complianceReport?.isCompliant !== false ? "COMPLIANT" : "ISSUES DETECTED";
+  
+  const esc = (s) => String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const now = new Date().toLocaleString("en-IN", { dateStyle: "long", timeStyle: "short" });
+  
+  const totalClauses = analysis?.clauses?.length || 0;
+  const totalRisks = riskReport?.risks?.length || 0;
+  const totalCompliance = complianceReport?.issues?.length || 0;
+
+  return `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head>
+    <meta charset="utf-8">
+    <title>Contract Review Summary</title>
+    <!--[if gte mso 9]>
+    <xml>
+      <w:WordDocument>
+        <w:View>Print</w:View>
+        <w:Zoom>100</w:Zoom>
+      </w:WordDocument>
+    </xml>
+    <![endif]-->
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        color: #334155;
+        line-height: 1.6;
+        font-size: 11pt;
+        margin: 20px;
+      }
+      .header-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        border-bottom: 3px solid #b8863b;
+      }
+      .header-title {
+        font-family: Georgia, serif;
+        font-size: 20pt;
+        font-weight: bold;
+        color: #0f172a;
+      }
+      .header-subtitle {
+        font-family: Arial, sans-serif;
+        font-size: 9pt;
+        color: #64748b;
+        text-transform: uppercase;
+      }
+      .meta-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+      }
+      .meta-table td {
+        padding: 8px 10px;
+        border: 1px solid #e2e8f0;
+        font-size: 10pt;
+        background-color: #f8fafc;
+      }
+      .meta-label {
+        font-weight: bold;
+        color: #475569;
+        width: 25%;
+      }
+      .meta-value {
+        color: #0f172a;
+      }
+      .kpi-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 25px;
+      }
+      .kpi-card {
+        width: 33%;
+        padding: 12px;
+        border: 1px solid #e2e8f0;
+        background-color: #f8fafc;
+        text-align: center;
+      }
+      .kpi-title {
+        font-size: 8.5pt;
+        color: #64748b;
+        text-transform: uppercase;
+        margin-bottom: 4px;
+      }
+      .kpi-value {
+        font-size: 14pt;
+        font-weight: bold;
+      }
+      h2 {
+        font-family: Georgia, serif;
+        font-size: 14pt;
+        color: #0f172a;
+        border-bottom: 1.5px solid #e2e8f0;
+        padding-bottom: 4px;
+        margin-top: 25px;
+        margin-bottom: 12px;
+      }
+      .summary-text {
+        font-size: 11pt;
+        color: #334155;
+        white-space: pre-wrap;
+      }
+      .section-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+      }
+      .section-table td {
+        width: 50%;
+        vertical-align: top;
+        padding: 12px;
+        border: 1px solid #e2e8f0;
+        background-color: #ffffff;
+      }
+      .section-title {
+        font-size: 11pt;
+        font-weight: bold;
+        color: #0f172a;
+        margin-top: 0;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        border-bottom: 1px solid #cbd5e1;
+        padding-bottom: 4px;
+      }
+      .bullet-list {
+        margin: 0;
+        padding-left: 20px;
+      }
+      .bullet-list li {
+        margin-bottom: 6px;
+        font-size: 10pt;
+      }
+      .disclaimer {
+        font-size: 9pt;
+        color: #94a3b8;
+        background-color: #f8fafc;
+        border: 1px dashed #cbd5e1;
+        padding: 12px;
+        margin-top: 35px;
+        text-align: center;
+        border-radius: 4px;
+      }
+      .footer-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 25px;
+        border-top: 1px solid #e2e8f0;
+        padding-top: 8px;
+      }
+      .footer-text {
+        font-size: 8.5pt;
+        color: #94a3b8;
+      }
+    </style>
+  </head>
+  <body>
+    <table class="header-table">
+      <tr>
+        <td style="padding-bottom: 10px;">
+          <span class="header-title">Contract Review Summary</span><br/>
+          <span class="header-subtitle">Docketwise AI Legal Pipeline</span>
+        </td>
+      </tr>
+    </table>
+    
+    <table class="meta-table">
+      <tr>
+        <td class="meta-label">Document:</td>
+        <td class="meta-value">${esc(contract.fileName)}</td>
+        <td class="meta-label">Contract Type:</td>
+        <td class="meta-value">${esc(analysis?.contractType === "bidding" ? "Bidding / Tender" : "Standard")}</td>
+      </tr>
+      <tr>
+        <td class="meta-label">User Country:</td>
+        <td class="meta-value">${esc(contract.userCountry)}</td>
+        <td class="meta-label">Employer Country:</td>
+        <td class="meta-value">${esc(contract.employerCountry)}</td>
+      </tr>
+      <tr>
+        <td class="meta-label">Client Country:</td>
+        <td class="meta-value">${esc(contract.clientCountry || "N/A")}</td>
+        <td class="meta-label">Scan Date:</td>
+        <td class="meta-value">${esc(now)}</td>
+      </tr>
+    </table>
+    
+    <table class="kpi-table">
+      <tr>
+        <td class="kpi-card" style="border-left: 4px solid ${{ HIGH: "#ef4444", MEDIUM: "#f59e0b", LOW: "#10b981" }[risk] || "#10b981"};">
+          <div class="kpi-title">Overall Risk</div>
+          <div class="kpi-value" style="color: ${{ HIGH: "#ef4444", MEDIUM: "#f59e0b", LOW: "#10b981" }[risk] || "#10b981"};">${esc(risk)}</div>
+        </td>
+        <td class="kpi-card" style="border-left: 4px solid ${complianceReport?.isCompliant !== false ? "#10b981" : "#ef4444"};">
+          <div class="kpi-title">Compliance Status</div>
+          <div class="kpi-value" style="color: ${complianceReport?.isCompliant !== false ? "#10b981" : "#ef4444"};">${esc(complianceStatus)}</div>
+        </td>
+        <td class="kpi-card">
+          <div class="kpi-title">Downstream Metrics</div>
+          <div class="kpi-value" style="font-size: 9.5pt; font-weight: normal; color: #475569; line-height: 1.3;">
+            ${totalClauses} Clauses Extracted<br/>
+            ${totalRisks} Risk Flags • ${totalCompliance} Issues
+          </div>
+        </td>
+      </tr>
+    </table>
+    
+    <h2>Executive Summary</h2>
+    <div class="summary-text">${esc(analysis?.summary || "No summary available.")}</div>
+    
+    <table class="section-table">
+      <tr>
+        <td>
+          <div class="section-title">Key Risks Flagged</div>
+          ${riskReport?.risks?.length > 0 ? `
+            <ul class="bullet-list">
+              ${riskReport.risks.slice(0, 6).map(r => `<li><strong>${esc(r.title)}</strong> (${esc(r.severity)}) - ${esc(r.description)}</li>`).join("")}
+            </ul>
+          ` : `<p style="font-style: italic; color: #64748b; font-size: 10pt;">No risks flagged.</p>`}
+        </td>
+        <td>
+          <div class="section-title">Compliance Checks</div>
+          ${complianceReport?.issues?.length > 0 ? `
+            <ul class="bullet-list">
+              ${complianceReport.issues.slice(0, 6).map(i => `<li><strong>${esc(i.title)}</strong> - ${esc(i.description)}</li>`).join("")}
+            </ul>
+          ` : `<p style="font-style: italic; color: #64748b; font-size: 10pt;">No compliance issues detected.</p>`}
+        </td>
+      </tr>
+    </table>
+    
+    <div class="disclaimer">
+      <strong>Legal Disclaimer:</strong> This document summary is generated automatically by the Docketwise AI platform. It is designed to assist in contract reviews and does not constitute formal legal advice. Please consult with a qualified attorney to review the full agreement before execution.
+    </div>
+    
+    <table class="footer-table">
+      <tr>
+        <td class="footer-text" style="text-align: left;">Docketwise Legal Tech Platform</td>
+        <td class="footer-text" style="text-align: right;">Generated on ${esc(now)}</td>
+      </tr>
+    </table>
+  </body>
+  </html>`;
 }
 
 // ─── Shared style constants ───────────────────────────────────────────────
@@ -204,28 +708,50 @@ export default function DocumentSummaryPanel({ open, onClose, report }) {
   const isBidding = analysis?.contractType === "bidding";
 
   const handleDownloadPDF = async () => {
+    if (!previewRef.current) return;
     setDownloading(true);
     try {
       const html2pdf = (await import("html2pdf.js")).default;
-      const el = previewRef.current;
-      if (!el) return;
-      // Capture the already-rendered visible white paper div — html2canvas
-      // cannot capture elements positioned off-screen (top:-9999px), so we
-      // use the live DOM node directly for a pixel-perfect PDF.
+      
       await html2pdf()
         .set({
-          margin:      [10, 14, 10, 14],
+          margin:      [15, 20, 15, 20],
           filename:    `${contract.fileName?.replace(/\.[^.]+$/, "") || "summary"}-report.pdf`,
-          html2canvas: { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
+          pagebreak:   { mode: ['avoid-all', 'css', 'legacy'] },
+          html2canvas: { 
+            scale: 2, 
+            useCORS: true, 
+            letterRendering: true, 
+            logging: false 
+          },
           jsPDF:       { unit: "mm", format: "a4", orientation: "portrait" },
-          pagebreak:   { mode: ["avoid-all", "css"] },
         })
-        .from(el)
+        .from(previewRef.current)
         .save();
     } finally {
       setDownloading(false);
     }
   };
+
+  const handleDownloadDOCX = () => {
+    try {
+      const htmlString = buildWordHTML(report);
+      const blob = new Blob(["\ufeff" + htmlString], {
+        type: "application/msword;charset=utf-8"
+      });
+      
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${contract.fileName?.replace(/\.[^.]+$/, "") || "summary"}-report.doc`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to generate Word document:", err);
+    }
+  }; 
 
 
 
@@ -257,10 +783,12 @@ export default function DocumentSummaryPanel({ open, onClose, report }) {
             )}
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            {/* Download PDF Button */}
             <button
               onClick={handleDownloadPDF}
               disabled={downloading}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono bg-seal/15 hover:bg-seal/30 text-seal-bright border border-seal/30 rounded-sm transition-all disabled:opacity-50"
+              title="Download summary report as PDF"
             >
               {downloading ? <span className="animate-pulse">Generating…</span> : (
                 <>
@@ -269,10 +797,25 @@ export default function DocumentSummaryPanel({ open, onClose, report }) {
                     <polyline points="7 10 12 15 17 10"/>
                     <line x1="12" y1="15" x2="12" y2="3"/>
                   </svg>
-                  Download PDF
+                  PDF
                 </>
               )}
             </button>
+
+            {/* Download DOCX Button */}
+            <button
+              onClick={handleDownloadDOCX}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono bg-[#b8863b]/15 hover:bg-[#b8863b]/30 text-[#e6b36e] border border-[#b8863b]/30 rounded-sm transition-all"
+              title="Download summary report as Word document (DOC)"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Word
+            </button>
+
             <button onClick={onClose} className="text-muted hover:text-paper w-7 h-7 flex items-center justify-center rounded-sm hover:bg-ink-border/50 transition-colors text-lg">×</button>
           </div>
         </div>
