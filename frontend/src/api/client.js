@@ -18,7 +18,13 @@ client.interceptors.response.use(
     if (err.response?.status === 401) {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("user");
-      if (!window.location.pathname.startsWith("/login")) {
+      const path = window.location.pathname;
+      if (
+        !path.startsWith("/login") &&
+        !path.startsWith("/register") &&
+        !path.startsWith("/forgot-password") &&
+        !path.startsWith("/reset-password")
+      ) {
         window.location.href = "/login";
       }
     }

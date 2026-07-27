@@ -148,8 +148,8 @@ export default function UploadModal({ onClose, onUploaded }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 px-4">
-      <div className="card w-full max-w-lg p-6 bg-ink border border-ink-border shadow-2xl relative">
+    <div className="fixed inset-0 bg-slate-900/45 backdrop-blur-[2px] flex items-center justify-center z-50 px-4">
+      <div className="card w-full max-w-lg p-6 bg-ink-raised border border-ink-border shadow-2xl relative animate-scaleIn">
         <div className="flex items-center justify-between mb-5">
           <h2 className="font-display text-xl tracking-tight text-paper">File a contract for analysis</h2>
           <button onClick={onClose} className="text-muted hover:text-paper text-xl leading-none">×</button>
@@ -192,9 +192,9 @@ export default function UploadModal({ onClose, onUploaded }) {
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className={`border-2 border-dashed rounded-md p-6 text-center transition-all ${
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200 ${
                 isDragOver 
-                  ? "border-seal-bright bg-seal/10 text-paper" 
+                  ? "border-seal bg-seal/5 text-paper scale-[0.99] shadow-inner" 
                   : "border-ink-border hover:border-seal text-muted hover:text-paper"
               }`}
             >
@@ -235,7 +235,7 @@ export default function UploadModal({ onClose, onUploaded }) {
               <button
                 type="button"
                 onClick={startCamera}
-                className="w-full py-2 bg-ink border border-ink-border hover:border-seal text-seal-bright font-mono text-xs tracking-wider uppercase rounded-sm flex items-center justify-center gap-2 transition-all"
+                className="w-full py-2 bg-ink border border-ink-border hover:border-seal text-seal font-mono text-xs tracking-wider uppercase rounded-sm flex items-center justify-center gap-2 transition-all"
               >
                 📷 Capture Document with Camera
               </button>
@@ -244,13 +244,13 @@ export default function UploadModal({ onClose, onUploaded }) {
             <div>
               <label className="block text-xs font-mono text-muted mb-1.5 tracking-wide">CONTRACT TYPE</label>
               <select
-                className="input-field font-mono text-xs bg-ink text-paper border border-ink-border focus:border-seal py-2 px-3 w-full rounded-sm"
-                style={{ backgroundColor: '#121214', color: '#e4e4e7', border: '1px solid #27272a' }}
+                className="input-field font-mono text-xs border border-ink-border focus:border-seal py-2 px-3 w-full rounded-sm bg-ink-raised"
                 value={contractType}
                 onChange={(e) => setContractType(e.target.value)}
               >
                 <option value="standard">Standard Contract</option>
                 <option value="bidding">Bidding / Tender Contract</option>
+                <option value="mou">Memorandum of Understanding (MOU)</option>
               </select>
             </div>
 
@@ -259,8 +259,8 @@ export default function UploadModal({ onClose, onUploaded }) {
                 <label className="block text-xs font-mono text-muted mb-1.5 tracking-wide">YOUR JURISDICTION (COUNTRY)</label>
                 <input
                   className="input-field uppercase font-mono text-xs"
-                  placeholder="e.g. US"
-                  maxLength={5}
+                  placeholder="e.g. United States"
+                  maxLength={100}
                   value={userCountry}
                   onChange={(e) => setUserCountry(e.target.value.toUpperCase())}
                   required
@@ -270,8 +270,8 @@ export default function UploadModal({ onClose, onUploaded }) {
                 <label className="block text-xs font-mono text-muted mb-1.5 tracking-wide">OTHER SIDE'S COUNTRY</label>
                 <input
                   className="input-field uppercase font-mono text-xs"
-                  placeholder="e.g. UK"
-                  maxLength={5}
+                  placeholder="e.g. United Kingdom"
+                  maxLength={100}
                   value={employerCountry}
                   onChange={(e) => setEmployerCountry(e.target.value.toUpperCase())}
                   required
@@ -282,14 +282,26 @@ export default function UploadModal({ onClose, onUploaded }) {
               <label className="block text-xs font-mono text-muted mb-1.5 tracking-wide">CLIENT COUNTRY (OPTIONAL)</label>
               <input
                 className="input-field uppercase font-mono text-xs"
-                placeholder="e.g. IN"
-                maxLength={5}
+                placeholder="e.g. India"
+                maxLength={100}
                 value={clientCountry}
                 onChange={(e) => setClientCountry(e.target.value.toUpperCase())}
               />
             </div>
 
-            {error && <p className="text-risk-high text-xs font-mono leading-relaxed bg-risk-high/5 p-2 rounded-sm border border-risk-high/20">{error}</p>}
+            {loading && (
+              <div className="space-y-2 animate-fadeInUp p-2 bg-slate-50 border border-slate-100 rounded-[6px]">
+                <div className="flex justify-between text-[9px] font-mono text-muted tracking-widest font-bold">
+                  <span>PROCESSING DOCUMENT IN AI LEDGER</span>
+                  <span className="animate-pulse">75%</span>
+                </div>
+                <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-seal rounded-full animate-pulse" style={{ width: '75%' }} />
+                </div>
+              </div>
+            )}
+
+            {error && <p className="text-risk-high text-xs font-mono leading-relaxed bg-risk-high/5 p-2.5 rounded-[4px] border border-risk-high/20">{error}</p>}
 
             <div className="flex justify-end gap-3 pt-2">
               <button type="button" onClick={onClose} className="btn-secondary font-mono text-xs uppercase tracking-wider">Cancel</button>
@@ -298,7 +310,7 @@ export default function UploadModal({ onClose, onUploaded }) {
                 disabled={loading || !file}
                 className="btn-primary font-mono text-xs uppercase tracking-wider px-5"
               >
-                {loading ? "Filing AI Pipeline…" : "File Contract"}
+                {loading ? "Filing..." : "File Contract"}
               </button>
             </div>
           </form>

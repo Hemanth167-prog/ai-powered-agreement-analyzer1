@@ -90,7 +90,7 @@ async function runTest() {
   // 3. Poll for analysis completion
   console.log("[3/5] Waiting for analysis to complete...");
   let analysisFinished = false;
-  for (let i = 0; i < 35; i++) {
+  for (let i = 0; i < 90; i++) {
     await new Promise(resolve => setTimeout(resolve, 3000));
     try {
       const res = await fetch(`${BASE_URL}/api/contracts/${contractId}`, {

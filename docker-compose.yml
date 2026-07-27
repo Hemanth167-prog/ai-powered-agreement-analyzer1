@@ -17,7 +17,7 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - mongo_data:/data/db
+      - ./database:/data/db
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
@@ -67,7 +67,7 @@ services:
     environment:
       <<: *common-env
       PORT: 4001
-      MONGO_URI: mongodb://mongo:27017/legalai_auth
+      MONGO_URI: mongodb://mongo:27017/project
     depends_on:
       mongo:
         condition: service_healthy
@@ -81,7 +81,7 @@ services:
     environment:
       <<: *common-env
       PORT: 4002
-      MONGO_URI: mongodb://mongo:27017/legalai_contracts
+      MONGO_URI: mongodb://mongo:27017/project
     volumes:
       - contract_uploads:/app/uploads
     depends_on:
@@ -99,7 +99,7 @@ services:
     environment:
       <<: *common-env
       PORT: 4003
-      MONGO_URI: mongodb://mongo:27017/legalai_ai
+      MONGO_URI: mongodb://mongo:27017/project
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-1.5-flash}
     depends_on:
@@ -117,7 +117,7 @@ services:
     environment:
       <<: *common-env
       PORT: 4004
-      MONGO_URI: mongodb://mongo:27017/legalai_risk_compliance
+      MONGO_URI: mongodb://mongo:27017/project
     depends_on:
       mongo:
         condition: service_healthy
@@ -131,7 +131,7 @@ services:
     environment:
       <<: *common-env
       PORT: 4005
-      MONGO_URI: mongodb://mongo:27017/legalai_chat
+      MONGO_URI: mongodb://mongo:27017/project
     depends_on:
       mongo:
         condition: service_healthy
@@ -145,10 +145,16 @@ services:
     environment:
       <<: *common-env
       PORT: 4006
+      MONGO_URI: mongodb://mongo:27017/project
     depends_on:
-      - contract-service
-      - risk-compliance-service
-      - audit-service
+      mongo:
+        condition: service_healthy
+      contract-service:
+        condition: service_started
+      risk-compliance-service:
+        condition: service_started
+      audit-service:
+        condition: service_started
 
   notification-service:
     build:
@@ -159,7 +165,12 @@ services:
     environment:
       <<: *common-env
       PORT: 4007
-      MONGO_URI: mongodb://mongo:27017/legalai_notifications
+      MONGO_URI: mongodb://mongo:27017/project
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM: ${SMTP_FROM}
     depends_on:
       mongo:
         condition: service_healthy
@@ -173,7 +184,7 @@ services:
     environment:
       <<: *common-env
       PORT: 4008
-      MONGO_URI: mongodb://mongo:27017/legalai_audit
+      MONGO_URI: mongodb://mongo:27017/project
     depends_on:
       mongo:
         condition: service_healthy
@@ -189,9 +200,9 @@ services:
     environment:
       <<: *common-env
       PORT: 4009
-      MONGO_URI: mongodb://mongo:27017/?appName=MongoDB+Compass&directConnection=true&serverSelectionTimeoutMS=2000
+      MONGO_URI: mongodb://mongo:27017/project
       DOCKER_ENV: "true"
-      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-1.5-flash}
     depends_on:
       mongo:
         condition: service_healthy
@@ -208,5 +219,4 @@ services:
       - gateway
 
 volumes:
-  mongo_data:
   contract_uploads:

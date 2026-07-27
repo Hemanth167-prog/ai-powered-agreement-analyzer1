@@ -16,16 +16,16 @@ function fmtTime(raw) {
 }
 
 const ACTION_COLORS = {
-  LOGIN:             { bg: "rgba(39,174,96,0.12)",   text: "#4ade80",  label: "LOGIN"      },
-  LOGOUT:            { bg: "rgba(251,146,60,0.12)",   text: "#fb923c",  label: "LOGOUT"     },
-  UPLOAD:            { bg: "rgba(96,165,250,0.12)",   text: "#60a5fa",  label: "UPLOAD"     },
-  DOWNLOAD:          { bg: "rgba(129,140,248,0.12)",  text: "#818cf8",  label: "DOWNLOAD"   },
-  DELETE:            { bg: "rgba(248,113,113,0.12)",  text: "#f87171",  label: "DELETE"     },
-  AI_ANALYSIS:       { bg: "rgba(56,189,248,0.12)",   text: "#38bdf8",  label: "AI SCAN"    },
-  REPORT_GENERATION: { bg: "rgba(192,132,252,0.12)",  text: "#c084fc",  label: "REPORT"     },
-  ADMIN_ACTION:      { bg: "rgba(245,158,11,0.12)",   text: "#f59e0b",  label: "ADMIN"      },
-  VIEW_REPORT:       { bg: "rgba(134,239,172,0.12)",  text: "#86efac",  label: "VIEW"       },
-  REGISTER:          { bg: "rgba(125,211,252,0.12)",  text: "#7dd3fc",  label: "REGISTER"   },
+  LOGIN:             { bg: "rgba(21,128,61,0.1)",    text: "#15803d",  label: "LOGIN"      },
+  LOGOUT:            { bg: "rgba(194,65,12,0.1)",    text: "#c2410c",  label: "LOGOUT"     },
+  UPLOAD:            { bg: "rgba(29,78,216,0.1)",    text: "#1d4ed8",  label: "UPLOAD"     },
+  DOWNLOAD:          { bg: "rgba(67,56,202,0.1)",    text: "#4338ca",  label: "DOWNLOAD"   },
+  DELETE:            { bg: "rgba(185,28,28,0.1)",    text: "#b91c1c",  label: "DELETE"     },
+  AI_ANALYSIS:       { bg: "rgba(14,116,144,0.1)",   text: "#0e7490",  label: "AI SCAN"    },
+  REPORT_GENERATION: { bg: "rgba(126,34,206,0.1)",   text: "#7e22ce",  label: "REPORT"     },
+  ADMIN_ACTION:      { bg: "rgba(161,98,7,0.1)",     text: "#a16207",  label: "ADMIN"      },
+  VIEW_REPORT:       { bg: "rgba(21,128,61,0.1)",    text: "#15803d",  label: "VIEW"       },
+  REGISTER:          { bg: "rgba(3,105,161,0.1)",    text: "#0369a1",  label: "REGISTER"   },
 };
 
 const ACTION_ICONS = {
@@ -107,7 +107,7 @@ export default function AuditLog() {
                   }`}
                   style={{
                     backgroundColor: filter === a ? s.bg : "transparent",
-                    borderColor: filter === a ? s.text + "60" : "#2a313d",
+                    borderColor: filter === a ? s.text + "60" : "#E2E0D9",
                     color: s.text,
                   }}
                 >

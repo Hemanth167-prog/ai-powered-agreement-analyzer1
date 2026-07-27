@@ -9,8 +9,10 @@ const userSchema = new mongoose.Schema(
     country: { type: String },
     isActive: { type: Boolean, default: true },
     lastActiveAt: { type: Date, default: Date.now },
+    resetPasswordOTP: { type: String, default: null },
+    resetPasswordExpires: { type: Date, default: null },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("User", userSchema);
+module.exports = mongoose.model("User", userSchema, "users");

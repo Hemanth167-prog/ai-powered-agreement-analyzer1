@@ -2,40 +2,91 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-ink: #F8FAFC;
+  --color-ink-raised: #FFFFFF;
+  --color-ink-border: #E2E8F0;
+  --color-paper: #0F172A;
+  --color-seal: #2563EB;
+  --color-seal-bright: #3B82F6;
+  --color-muted: #64748B;
+  --color-risk-high: #DC2626;
+  --color-risk-medium: #D97706;
+  --color-risk-low: #059669;
+  --color-glass-bg: rgba(255, 255, 255, 0.75);
+  --color-glass-border: rgba(226, 232, 240, 0.6);
+  --color-card-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.02);
+}
+
+.dark {
+  --color-ink: #0B0F19;
+  --color-ink-raised: #131B2E;
+  --color-ink-border: #1E293B;
+  --color-paper: #F8FAFC;
+  --color-seal: #3B82F6;
+  --color-seal-bright: #60A5FA;
+  --color-muted: #94A3B8;
+  --color-risk-high: #EF4444;
+  --color-risk-medium: #F59E0B;
+  --color-risk-low: #10B981;
+  --color-glass-bg: rgba(19, 27, 46, 0.7);
+  --color-glass-border: rgba(30, 41, 59, 0.45);
+  --color-card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
 @layer base {
   * {
-    border-color: theme('colors.ink.border');
+    border-color: var(--color-ink-border);
   }
 
   body {
     -webkit-font-smoothing: antialiased;
+    background-color: var(--color-ink);
+    color: var(--color-paper);
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   ::selection {
-    background: theme('colors.seal.DEFAULT');
-    color: theme('colors.ink.DEFAULT');
+    background: var(--color-seal);
+    color: #FFFFFF;
   }
 }
 
 @layer components {
   .card {
-    @apply bg-ink-raised border border-ink-border rounded-sm;
+    @apply bg-ink-raised border border-ink-border rounded-[10px] transition-all duration-300;
+    box-shadow: var(--color-card-shadow);
   }
 
   .btn-primary {
-    @apply bg-seal text-ink font-body font-medium px-4 py-2 rounded-sm hover:bg-seal-bright transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply bg-seal text-white font-body font-semibold px-5 py-2.5 rounded-[6px] hover:bg-seal-bright transition-all shadow-sm hover:shadow-md active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none;
   }
 
   .btn-secondary {
-    @apply border border-ink-border text-paper font-body px-4 py-2 rounded-sm hover:border-seal transition-colors disabled:opacity-50;
+    @apply border border-ink-border bg-ink-raised text-paper font-body font-semibold px-5 py-2.5 rounded-[6px] hover:bg-ink hover:border-muted transition-all shadow-sm active:scale-[0.98] disabled:opacity-50;
   }
 
   .input-field {
-    @apply w-full bg-ink border border-ink-border rounded-sm px-3 py-2 text-paper placeholder-muted font-body focus:outline-none focus:ring-1 focus:ring-seal focus:border-seal transition-colors;
+    @apply w-full bg-ink-raised border border-ink-border rounded-[6px] px-3.5 py-2.5 text-paper placeholder-muted font-body focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-seal transition-all duration-150;
   }
 
   .docket-number {
-    @apply font-mono text-xs text-muted tracking-wider;
+    @apply font-mono text-[10px] text-muted tracking-widest uppercase;
+  }
+
+  .glass-card {
+    background: var(--color-glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--color-glass-border);
+    box-shadow: var(--color-card-shadow);
+  }
+
+  .sidebar-bg {
+    background: var(--color-glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
   }
 }
 
@@ -115,6 +166,85 @@
 
   .urgency-pulse {
     animation: urgencyPulse 1.5s ease-in-out infinite;
+  }
+
+  /* Subtle classic radial dot background pattern */
+  .bg-grid {
+    background-image: radial-gradient(rgba(140, 98, 57, 0.07) 1.2px, transparent 1.2px);
+    background-size: 32px 32px;
+  }
+
+  /* Fade-in-up animation for cards */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fadeInUp {
+    animation: fadeInUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  /* Slow floating animation for background elements */
+  @keyframes floatSlow {
+    0%, 100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-10px) rotate(1deg);
+    }
+  }
+
+  @keyframes floatDelayed {
+    0%, 100% {
+      transform: translateY(0) rotate(0deg) translateX(0);
+    }
+    50% {
+      transform: translateY(-12px) rotate(-1.5deg) translateX(5px);
+    }
+  }
+
+  /* Very slow rotation for constellations or grid lines */
+  @keyframes spinVerySlow {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  .animate-float-slow {
+    animation: floatSlow 20s ease-in-out infinite;
+  }
+
+  .animate-float-delayed {
+    animation: floatDelayed 28s ease-in-out infinite;
+  }
+
+  .animate-spin-very-slow {
+    animation: spinVerySlow 180s linear infinite;
+  }
+
+  /* Modal scale-in */
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .animate-scaleIn {
+    animation: scaleIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 }
 

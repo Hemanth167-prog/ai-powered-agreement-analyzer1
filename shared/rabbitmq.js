@@ -5,14 +5,19 @@ const amqp = require("amqplib");
 const AI_ANALYSIS_QUEUE = "ai_analysis_queue";
 const AI_RESULT_QUEUE = "ai_result_queue";
 
-const MAX_RETRIES = 10;
+const fs = require("fs");
+const isDocker = fs.existsSync("/app") || process.env.DOCKER_ENV === "true";
+const MAX_RETRIES = isDocker ? 10 : 2;
 const RETRY_DELAY_MS = 3000;
 
 let channelPromise = null;
 
 async function connectWithRetry(retries = 0) {
   try {
-    const url = process.env.RABBITMQ_URL || "amqp://rabbitmq:5672";
+    const fs = require("fs");
+    const isDocker = fs.existsSync("/app") || process.env.DOCKER_ENV === "true";
+    const defaultRabbitUrl = isDocker ? "amqp://rabbitmq:5672" : "amqp://localhost:5672";
+    const url = process.env.RABBITMQ_URL || defaultRabbitUrl;
     const conn = await amqp.connect(url);
 
     // Reset on connection error/close so the next call triggers a fresh reconnect

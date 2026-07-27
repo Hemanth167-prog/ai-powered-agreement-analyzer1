@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const mongoose = require("mongoose");
 const Contract = require("../models/Contract");
 const { ok, fail } = require("/app/shared/response");
 const { recordAudit, notifyUser } = require("/app/shared/audit");
@@ -52,16 +53,20 @@ exports.uploadContract = async (req, res) => {
     });
 
     // Hand off to the AI pipeline asynchronously via the queue - including the image payload if present.
-    await publish(AI_ANALYSIS_QUEUE, {
-      contractId: contract._id.toString(),
-      ownerId: contract.owner.toString(),
-      text: extractedText,
-      image: imagePayload,
-      userCountry,
-      employerCountry,
-      clientCountry,
-      contractType: contract.contractType,
-    });
+    try {
+      await publish(AI_ANALYSIS_QUEUE, {
+        contractId: contract._id.toString(),
+        ownerId: contract.owner.toString(),
+        text: extractedText,
+        image: imagePayload,
+        userCountry,
+        employerCountry,
+        clientCountry,
+        contractType: contract.contractType,
+      });
+    } catch (queueErr) {
+      console.warn("[contract-service] RabbitMQ publish failed, skipping queue dispatch:", queueErr.message);
+    }
 
     await recordAudit({
       userId: req.user.id,
@@ -79,9 +84,9 @@ exports.uploadContract = async (req, res) => {
 };
 
 exports.listContracts = async (req, res) => {
-  let query = { owner: req.user.id };
+  let query = { owner: req.user.id, isDeleted: { $ne: true } };
   if (req.user.role === "admin" && req.query.ownerId) {
-    query = { owner: req.query.ownerId };
+    query = { owner: req.query.ownerId }; // Admin can see user's entire history including deleted ones!
   }
   const contracts = await Contract.find(query).sort({ createdAt: -1 });
   return ok(res, contracts);
@@ -89,9 +94,9 @@ exports.listContracts = async (req, res) => {
 
 exports.getContract = async (req, res) => {
   try {
-    let query = { _id: req.params.id, owner: req.user.id };
+    let query = { _id: req.params.id, owner: req.user.id, isDeleted: { $ne: true } };
     if (req.user.role === "admin") {
-      query = { _id: req.params.id };
+      query = { _id: req.params.id }; // Admin can view it even if soft-deleted
     }
     const contract = await Contract.findOne(query);
     if (!contract) return fail(res, "Contract not found", 404);
@@ -103,9 +108,12 @@ exports.getContract = async (req, res) => {
 
 exports.deleteContract = async (req, res) => {
   try {
-    const contract = await Contract.findOneAndDelete({ _id: req.params.id, owner: req.user.id });
+    const contract = await Contract.findOneAndUpdate(
+      { _id: req.params.id, owner: req.user.id },
+      { isDeleted: true },
+      { new: true }
+    );
     if (!contract) return fail(res, "Contract not found", 404);
-    if (contract.filePath && fs.existsSync(contract.filePath)) fs.unlinkSync(contract.filePath);
 
     await recordAudit({
       userId: req.user.id,
@@ -175,6 +183,8 @@ exports.deleteUserContractsInternal = async (req, res) => {
   try {
     const { userId } = req.params;
     const contracts = await Contract.find({ owner: userId });
+    const db = mongoose.connection.db;
+
     for (const contract of contracts) {
       if (contract.filePath && fs.existsSync(contract.filePath)) {
         try {
@@ -183,6 +193,12 @@ exports.deleteUserContractsInternal = async (req, res) => {
           console.error(`Failed to delete contract file ${contract.filePath}:`, err.message);
         }
       }
+      
+      // Clean up child documents for this contract
+      await db.collection("ai_analysis").deleteMany({ contract: contract._id });
+      await db.collection("risk_reports").deleteMany({ contract: contract._id });
+      await db.collection("compliance_report").deleteMany({ contract: contract._id });
+      await db.collection("chatmessages").deleteMany({ contract: contract._id });
     }
     await Contract.deleteMany({ owner: userId });
     return ok(res, null, "User contracts deleted");

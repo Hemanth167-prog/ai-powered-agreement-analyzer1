@@ -11,7 +11,7 @@ const contractSchema = new mongoose.Schema(
     userCountry: { type: String, required: true },
     employerCountry: { type: String, required: true },
     clientCountry: { type: String },
-    contractType: { type: String, enum: ["standard", "bidding"], default: "standard" },
+    contractType: { type: String, enum: ["standard", "bidding", "mou"], default: "standard" },
     status: {
       type: String,
       enum: ["UPLOADED", "PROCESSING", "ANALYZED", "FAILED"],
@@ -20,8 +20,9 @@ const contractSchema = new mongoose.Schema(
     aiAnalysisId: { type: mongoose.Schema.Types.ObjectId, default: null }, // ref -> ai_analysis
     riskReportId: { type: mongoose.Schema.Types.ObjectId, default: null }, // ref -> risk_reports
     complianceReportId: { type: mongoose.Schema.Types.ObjectId, default: null }, // ref -> compliance_reports
+    isDeleted: { type: Boolean, default: false, index: true },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Contract", contractSchema);
+module.exports = mongoose.model("Contract", contractSchema, "contract");

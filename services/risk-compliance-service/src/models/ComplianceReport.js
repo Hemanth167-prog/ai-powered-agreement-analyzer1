@@ -11,4 +11,4 @@ const complianceReportSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("ComplianceReport", complianceReportSchema);
+module.exports = mongoose.model("ComplianceReport", complianceReportSchema, "compliance_report");

@@ -11,4 +11,4 @@ const riskReportSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("RiskReport", riskReportSchema);
+module.exports = mongoose.model("RiskReport", riskReportSchema, "risk_reports");

@@ -1,3 +1,35 @@
+// Local Development Bootstrapper (supports running outside Docker Compose)
+const fs = require("fs");
+const path = require("path");
+if (process.platform === "win32" || !fs.existsSync("/app")) {
+  let projectRoot = __dirname;
+  while (projectRoot && !fs.existsSync(path.join(projectRoot, "shared")) && projectRoot !== path.dirname(projectRoot)) {
+    projectRoot = path.dirname(projectRoot);
+  }
+  const Module = require("module");
+  const originalResolve = Module._resolveFilename;
+  Module._resolveFilename = function (request, parent, isMain, options) {
+    if (request.startsWith("/app/")) {
+      request = request.replace("/app", projectRoot);
+    }
+    return originalResolve(request, parent, isMain, options);
+  };
+  const envPath = path.join(projectRoot, ".env");
+  if (fs.existsSync(envPath)) {
+    fs.readFileSync(envPath, "utf-8").split(/\r?\n/).forEach(line => {
+      const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+      if (match) {
+        const key = match[1];
+        let val = (match[2] || "").trim();
+        if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+          val = val.substring(1, val.length - 1);
+        }
+        if (process.env[key] === undefined) process.env[key] = val;
+      }
+    });
+  }
+}
+
 /**
  * API Gateway
  * -----------
@@ -23,6 +55,27 @@ app.use(morgan("combined"));
 // Parse JSON body for firewall inspection (only parses if content-type is application/json)
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ limit: "20mb", extended: true }));
+
+// Recursively sanitize all keys in requests to prevent NoSQL query operator injection (Defense in Depth)
+function sanitizeObject(obj) {
+  if (Array.isArray(obj)) {
+    for (let i = 0; i < obj.length; i++) {
+      if (typeof obj[i] === "object" && obj[i] !== null) {
+        sanitizeObject(obj[i]);
+      }
+    }
+  } else if (typeof obj === "object" && obj !== null) {
+    Object.keys(obj).forEach(key => {
+      if (key.startsWith("$")) {
+        delete obj[key];
+      } else if (typeof obj[key] === "object" && obj[key] !== null) {
+        sanitizeObject(obj[key]);
+      }
+    });
+  }
+}
+
+
 
 // Malicious payload checker for NoSQL injection, SQL injection, XSS, and Path Traversal
 function hasMaliciousPayload(data) {
@@ -90,8 +143,28 @@ app.use((req, res, next) => {
       threatType: threat
     });
   }
+
+  // Sanitize the inputs now that we've checked for malicious injections (Defense in depth)
+  if (req.body) sanitizeObject(req.body);
+  if (req.query) sanitizeObject(req.query);
+  if (req.params) sanitizeObject(req.params);
+
   next();
 });
+
+// Dedicated rate limiter for authentication endpoints to prevent brute-force attacks
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 30, // Limit each IP to 30 requests per window (15 mins) on auth endpoints
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: "Too many login or registration attempts. Please try again after 15 minutes." }
+});
+
+app.use("/api/auth/login", authLimiter);
+app.use("/api/auth/register", authLimiter);
+app.use("/api/auth/forgot-password", authLimiter);
+app.use("/api/auth/reset-password", authLimiter);
 
 // Global rate limiter - protects every downstream service
 app.use(
@@ -117,7 +190,13 @@ const SERVICES = {
 };
 
 // Routes that don't require a token (registration / login)
-const PUBLIC_PATHS = ["/api/auth/register", "/api/auth/login", "/api/auth/refresh"];
+const PUBLIC_PATHS = [
+  "/api/auth/register",
+  "/api/auth/login",
+  "/api/auth/refresh",
+  "/api/auth/forgot-password",
+  "/api/auth/reset-password"
+];
 
 function isPublic(path) {
   return PUBLIC_PATHS.some((p) => path.startsWith(p));

@@ -1,11 +1,23 @@
 const Notification = require("../models/Notification");
 const { ok, fail } = require("/app/shared/response");
+const mailer = require("../utils/mailer");
 
 // Called internally by every other service (REST) whenever a process completes.
 exports.create = async (req, res) => {
   try {
-    const { userId, type, title, message, meta } = req.body;
+    const { userId, type, title, message, meta, email } = req.body;
     const notification = await Notification.create({ userId, type, title, message, meta });
+
+    if (email) {
+      mailer.sendMail({
+        to: email,
+        subject: title,
+        text: message
+      }).catch(err => {
+        console.error(`Background email sending failed:`, err.message);
+      });
+    }
+
     return ok(res, notification, "Notification created", 201);
   } catch (err) {
     return fail(res, err.message, 500);

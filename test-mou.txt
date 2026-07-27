@@ -1,0 +1,17 @@
+MEMORANDUM OF UNDERSTANDING
+
+This Memorandum of Understanding (MOU) is entered into by and between:
+Party A: Tech Corp (registered in United States)
+Party B: Innovate Ltd (registered in India)
+
+1. PURPOSE & OBJECTIVES
+The parties intend to collaborate on developing artificial intelligence software models. This agreement outlines their shared vision and general intent.
+
+2. CONFIDENTIALITY
+Each party agrees to keep all proprietary information shared during this collaboration strictly confidential. This Section 2 shall be legally binding upon the parties.
+
+3. GOVERNING LAW
+This MOU shall be governed by the laws of New York, USA. This Section 3 shall be legally binding.
+
+4. NON-BINDING NATURE
+Except for Sections 2 and 3, this MOU is non-binding and represents only a statement of intent to cooperate. Neither party shall be liable for failing to enter into a definitive agreement.

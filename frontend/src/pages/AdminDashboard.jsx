@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import client from "../api/client.js";
 import StatusBadge from "../components/StatusBadge.jsx";
 import UsersPieChart, { getAvatarColor } from "../components/UsersPieChart.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -22,16 +23,16 @@ function fmtAuditTime(raw) {
 
 /** Badge color per action type */
 const ACTION_STYLE = {
-  LOGIN:              { bg: "#1c3a28", color: "#4ade80", label: "LOGIN"      },
-  LOGOUT:             { bg: "#3a2a14", color: "#fb923c", label: "LOGOUT"     },
-  UPLOAD:             { bg: "#172d45", color: "#60a5fa", label: "UPLOAD"     },
-  DOWNLOAD:           { bg: "#1e2d45", color: "#818cf8", label: "DOWNLOAD"   },
-  DELETE:             { bg: "#3a1a1a", color: "#f87171", label: "DELETE"     },
-  AI_ANALYSIS:        { bg: "#1d2a3a", color: "#38bdf8", label: "AI SCAN"    },
-  REPORT_GENERATION:  { bg: "#2a1d3a", color: "#c084fc", label: "REPORT"     },
-  ADMIN_ACTION:       { bg: "#3a2814", color: "#f59e0b", label: "ADMIN"      },
-  VIEW_REPORT:        { bg: "#1e3320", color: "#86efac", label: "VIEW"       },
-  REGISTER:           { bg: "#1c2f3a", color: "#7dd3fc", label: "REGISTER"   },
+  LOGIN:              { bg: "#dcfce7", color: "#15803d", label: "LOGIN"      },
+  LOGOUT:             { bg: "#ffedd5", color: "#c2410c", label: "LOGOUT"     },
+  UPLOAD:             { bg: "#dbeafe", color: "#1d4ed8", label: "UPLOAD"     },
+  DOWNLOAD:           { bg: "#e0e7ff", color: "#4338ca", label: "DOWNLOAD"   },
+  DELETE:             { bg: "#fee2e2", color: "#b91c1c", label: "DELETE"     },
+  AI_ANALYSIS:        { bg: "#ecfeff", color: "#0e7490", label: "AI SCAN"    },
+  REPORT_GENERATION:  { bg: "#f3e8ff", color: "#7e22ce", label: "REPORT"     },
+  ADMIN_ACTION:       { bg: "#fef9c3", color: "#a16207", label: "ADMIN"      },
+  VIEW_REPORT:        { bg: "#dcfce7", color: "#15803d", label: "VIEW"       },
+  REGISTER:           { bg: "#e0f2fe", color: "#0369a1", label: "REGISTER"   },
 };
 
 function ActionBadge({ action }) {
@@ -62,11 +63,19 @@ function UserAvatar({ name, userId }) {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function AdminDashboard() {
+  const { user: currentUser } = useAuth();
+  const isMainAdmin = currentUser?.email === "parasahemanth5119640@gmail.com";
+
   const [users, setUsers]           = useState([]);
   const [activeData, setActiveData] = useState({ count: 0, activeUsers: [] });
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState("");
   const [success, setSuccess]       = useState("");
+
+  const [showAddAdmin, setShowAddAdmin] = useState(false);
+  const [adminForm, setAdminForm]       = useState({ name: "", email: "", password: "", country: "" });
+  const [addAdminLoading, setAddAdminLoading] = useState(false);
+  const [addAdminError, setAddAdminError]     = useState("");
 
   // Inspect user history
   const [selectedUser, setSelectedUser]     = useState(null);
@@ -105,6 +114,17 @@ export default function AdminDashboard() {
     try {
       const { data } = await client.get("/auth/admin/active-count");
       setActiveData(data.data);
+      if (data.data && data.data.activeUsers) {
+        setUsers((prevUsers) =>
+          prevUsers.map((u) => {
+            const activeUser = data.data.activeUsers.find((au) => au._id === u._id);
+            if (activeUser && activeUser.lastActiveAt !== u.lastActiveAt) {
+              return { ...u, lastActiveAt: activeUser.lastActiveAt };
+            }
+            return u;
+          })
+        );
+      }
     } catch {
       // silent
     }
@@ -174,9 +194,25 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleAddAdminSubmit = async (e) => {
+    e.preventDefault();
+    setAddAdminError("");
+    setAddAdminLoading(true);
+    try {
+      await client.post("/auth/admin/admins", adminForm);
+      setSuccess(`Admin account "${adminForm.name}" created successfully.`);
+      setAdminForm({ name: "", email: "", password: "", country: "" });
+      setShowAddAdmin(false);
+      fetchUsers();
+    } catch (err) {
+      setAddAdminError(err.response?.data?.message || "Failed to create admin account.");
+    } finally {
+      setAddAdminLoading(false);
+    }
+  };
+
   const isUserActive = (u) => {
-    if (!u.lastActiveAt) return false;
-    return Date.now() - new Date(u.lastActiveAt).getTime() < 15000;
+    return activeData.activeUsers?.some((au) => au._id === u._id) || false;
   };
 
   // ── Filtered audit logs ───────────────────────────────────────────────────
@@ -208,8 +244,8 @@ export default function AdminDashboard() {
       {/* ── KPI Row ──────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Pie Chart card */}
-        <div className="card p-5 bg-ink border border-ink-border flex flex-col items-center justify-center gap-2 relative overflow-visible"
-          style={{ boxShadow: "0 0 30px rgba(39,174,96,0.06)" }}>
+        <div className="card p-5 border border-ink-border flex flex-col items-center justify-center gap-2 relative overflow-visible"
+          style={{ boxShadow: "0 10px 40px -10px rgba(140,98,57,0.04)" }}>
           <span className="text-xs font-mono text-muted tracking-wider self-start mb-2">
             USER ACTIVITY OVERVIEW
           </span>
@@ -217,15 +253,15 @@ export default function AdminDashboard() {
         </div>
 
         {/* Total Registered */}
-        <div className="card p-5 bg-ink border border-ink-border">
+        <div className="card p-5 border border-ink-border">
           <span className="text-xs font-mono text-muted tracking-wider block mb-3">TOTAL REGISTERED</span>
           <div className="font-display text-5xl text-paper">{users.length}</div>
           <p className="text-xs text-muted mt-3 font-mono">Unique accounts in database</p>
         </div>
 
         {/* Firewall */}
-        <div className="card p-5 bg-ink border border-ink-border"
-          style={{ boxShadow: "0 0 15px rgba(242,153,74,0.03)" }}>
+        <div className="card p-5 border border-ink-border"
+          style={{ boxShadow: "0 10px 40px -10px rgba(140,98,57,0.04)" }}>
           <span className="text-xs font-mono text-muted tracking-wider block mb-3">SECURITY STATUS</span>
           <div className="text-risk-low font-mono text-lg font-bold">ACTIVE</div>
           <p className="text-xs text-muted mt-4 font-mono">WAF / MongoDB Injection Prevention: ON</p>
@@ -355,9 +391,19 @@ export default function AdminDashboard() {
       <div className="card overflow-x-auto">
         <div className="p-4 border-b border-ink-border flex justify-between items-center">
           <span className="text-xs font-mono text-muted tracking-widest uppercase">User Directory</span>
-          <button onClick={fetchUsers} className="text-xs text-seal-bright hover:underline font-mono">
-            Refresh
-          </button>
+          <div className="flex items-center gap-3">
+            {isMainAdmin && (
+              <button
+                onClick={() => setShowAddAdmin(true)}
+                className="btn-primary font-mono text-xs uppercase py-1 px-3.5 shadow-sm"
+              >
+                + Add Admin
+              </button>
+            )}
+            <button onClick={fetchUsers} className="text-xs text-seal-bright hover:underline font-mono">
+              Refresh
+            </button>
+          </div>
         </div>
 
         {loading ? (
@@ -422,7 +468,7 @@ export default function AdminDashboard() {
                       </button>
                       <button
                         onClick={() => purgeUser(u._id, u.name)}
-                        disabled={u.role === "admin"}
+                        disabled={(u.role === "admin" && !isMainAdmin) || u.email === "parasahemanth5119640@gmail.com"}
                         className="text-risk-high border border-risk-high/30 hover:bg-risk-high hover:text-paper px-2.5 py-1 rounded-sm transition-colors disabled:opacity-30 disabled:pointer-events-none font-mono"
                       >
                         Purge
@@ -438,8 +484,8 @@ export default function AdminDashboard() {
 
       {/* ── User History Modal ───────────────────────────────────────────── */}
       {selectedUser && (
-        <div className="fixed inset-0 bg-black/85 flex items-center justify-center z-50 px-4">
-          <div className="card w-full max-w-xl p-6 bg-ink border border-ink-border relative shadow-2xl">
+        <div className="fixed inset-0 bg-slate-900/45 backdrop-blur-[2px] flex items-center justify-center z-50 px-4">
+          <div className="card w-full max-w-xl p-6 bg-ink-raised border border-ink-border relative shadow-2xl animate-scaleIn">
             <div className="flex items-center justify-between mb-5 border-b border-ink-border pb-3">
               <div className="flex items-center gap-3">
                 <UserAvatar name={selectedUser.name} userId={selectedUser._id} />
@@ -497,6 +543,97 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Add Admin Modal ───────────────────────────────────────────────── */}
+      {showAddAdmin && (
+        <div className="fixed inset-0 bg-slate-900/45 backdrop-blur-[2px] flex items-center justify-center z-50 px-4">
+          <div className="card w-full max-w-md p-6 bg-ink-raised border border-ink-border relative shadow-2xl animate-scaleIn">
+            <div className="flex items-center justify-between mb-5 border-b border-ink-border pb-3">
+              <h3 className="font-display text-lg text-paper">Create New Administrator</h3>
+              <button
+                onClick={() => {
+                  setShowAddAdmin(false);
+                  setAddAdminError("");
+                }}
+                className="text-muted hover:text-paper text-xl"
+              >×</button>
+            </div>
+
+            <form onSubmit={handleAddAdminSubmit} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-mono text-muted mb-1.5 tracking-wider uppercase font-bold">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Hemanth"
+                  className="input-field font-sans text-xs"
+                  value={adminForm.name}
+                  onChange={(e) => setAdminForm(prev => ({ ...prev, name: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-mono text-muted mb-1.5 tracking-wider uppercase font-bold">Email Address</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="e.g. user@domain.com"
+                  className="input-field font-sans text-xs"
+                  value={adminForm.email}
+                  onChange={(e) => setAdminForm(prev => ({ ...prev, email: e.target.value.toLowerCase() }))}
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-mono text-muted mb-1.5 tracking-wider uppercase font-bold">Password</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Enter secure password"
+                  className="input-field font-sans text-xs"
+                  value={adminForm.password}
+                  onChange={(e) => setAdminForm(prev => ({ ...prev, password: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-mono text-muted mb-1.5 tracking-wider uppercase font-bold">Country (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. India"
+                  className="input-field uppercase font-mono text-xs"
+                  maxLength={100}
+                  value={adminForm.country}
+                  onChange={(e) => setAdminForm(prev => ({ ...prev, country: e.target.value.toUpperCase() }))}
+                />
+              </div>
+
+              {addAdminError && (
+                <p className="text-risk-high text-xs font-mono leading-relaxed bg-risk-high/5 p-2.5 rounded-[4px] border border-risk-high/20">
+                  {addAdminError}
+                </p>
+              )}
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-ink-border">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddAdmin(false);
+                    setAddAdminError("");
+                  }}
+                  className="btn-secondary font-mono text-xs uppercase tracking-wider"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={addAdminLoading}
+                  className="btn-primary font-mono text-xs uppercase tracking-wider px-5"
+                >
+                  {addAdminLoading ? "Creating..." : "Create Admin"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

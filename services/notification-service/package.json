@@ -8,6 +8,7 @@
     "helmet": "^7.1.0",
     "cors": "^2.8.5",
     "morgan": "^1.10.0",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^6.9.13"
   }
 }

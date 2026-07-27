@@ -1,28 +1,29 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
         ink: {
-          DEFAULT: "#14181F",
-          raised: "#1C222C",
-          border: "#2A313D",
+          DEFAULT: "var(--color-ink)",
+          raised: "var(--color-ink-raised)",
+          border: "var(--color-ink-border)",
         },
-        paper: "#F3F0E8",
+        paper: "var(--color-paper)",
         seal: {
-          DEFAULT: "#B8863B",
-          bright: "#D9A24C",
+          DEFAULT: "var(--color-seal)",
+          bright: "var(--color-seal-bright)",
         },
         risk: {
-          high: "#B2483A",
-          medium: "#B8863B",
-          low: "#4C7A63",
+          high: "var(--color-risk-high)",
+          medium: "var(--color-risk-medium)",
+          low: "var(--color-risk-low)",
         },
-        muted: "#8D93A0",
+        muted: "var(--color-muted)",
       },
       fontFamily: {
-        display: ["'Source Serif 4'", "serif"],
+        display: ["'Manrope'", "sans-serif"],
         body: ["'Inter'", "sans-serif"],
         mono: ["'IBM Plex Mono'", "monospace"],
       },

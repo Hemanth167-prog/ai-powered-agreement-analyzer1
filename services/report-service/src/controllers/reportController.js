@@ -1,6 +1,7 @@
 const axios = require("axios");
 const { ok, fail } = require("/app/shared/response");
 const { recordAudit } = require("/app/shared/audit");
+const Report = require("../models/Report");
 
 const CONTRACT_SERVICE_URL = process.env.CONTRACT_SERVICE_URL || "http://contract-service:4002";
 const RISK_SERVICE_URL = process.env.RISK_SERVICE_URL || "http://risk-compliance-service:4004";
@@ -29,6 +30,21 @@ exports.buildContractReport = async (req, res) => {
     };
 
     if (!report.contract) return fail(res, "Contract not found or you don't have access", 404);
+
+    // Save report snapshots in MongoDB reports collection
+    await Report.findOneAndUpdate(
+      { contractId },
+      {
+        contractId,
+        ownerId: req.user.id,
+        contract: report.contract,
+        riskReport: report.riskReport,
+        complianceReport: report.complianceReport,
+        analysis: report.analysis,
+        generatedAt: new Date(report.generatedAt),
+      },
+      { upsert: true, new: true }
+    );
 
     await recordAudit({ userId: req.user.id, action: "REPORT_GENERATION", status: "SUCCESS", meta: { contractId } });
 

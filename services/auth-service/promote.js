@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const User = require("./src/models/User");
 
 // Connect to the local MongoDB database
-const uri = process.env.MONGO_URI || "mongodb://localhost:27017/legalai_auth";
+const uri = process.env.MONGO_URI || "mongodb://localhost:27017/project";
 
 mongoose.connect(uri)
   .then(async () => {

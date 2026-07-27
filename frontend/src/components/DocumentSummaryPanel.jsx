@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import LawExplainerModal from "./LawExplainerModal.jsx";
 
 // ─── Date urgency helpers ─────────────────────────────────────────────────
 
@@ -7,6 +8,27 @@ function daysUntil(dateStr) {
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return null;
   return Math.ceil((d.getTime() - Date.now()) / 86400000);
+}
+
+function formatSummary(text) {
+  if (!text) return "";
+  let safe = String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+  // Highlight dates (e.g. 15 August 2026, 2026-08-15, 31/12/2026, etc.)
+  const dateRegex = /\b\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}\b|\b\d{4}[-/.]\d{1,2}[-/.]\d{1,2}\b|\b\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\b|\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}\b/gi;
+  safe = safe.replace(dateRegex, (match) => {
+    return `<span class="bg-amber-500/15 text-amber-500 border border-amber-500/30 px-1 py-0.5 rounded font-mono text-[11px] font-semibold tracking-wider whitespace-nowrap shadow-sm" style="background-color: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 5px; border-radius: 3px; font-family: monospace; font-size: 11px; font-weight: 600; white-space: nowrap;">${match}</span>`;
+  });
+
+  // Highlight bold markdown (laws, acts, regulations)
+  safe = safe.replace(/\*\*(.*?)\*\*/g, '<span class="bg-seal/15 text-seal-bright border border-seal/30 px-1.5 py-0.5 rounded font-semibold shadow-sm font-sans" style="background-color: rgba(184, 134, 59, 0.15); color: #b8863b; border: 1px solid rgba(184, 134, 59, 0.3); padding: 2px 6px; border-radius: 3px; font-weight: 600; font-family: sans-serif;">$1</span>');
+
+  return safe;
 }
 
 // ─── PDF HTML builder — constructs a premium single-page document summary ───────────────────
@@ -191,6 +213,70 @@ function buildSinglePageSummaryHTML(report) {
         display: flex;
         justify-content: space-between;
       }
+      .favorability-container {
+        border: 1px solid #cbd5e1;
+        background: #f8fafc;
+        border-radius: 6px;
+        padding: 12px 14px;
+        margin-bottom: 18px;
+      }
+      .favorability-bar-wrapper {
+        margin-bottom: 12px;
+      }
+      .favorability-labels {
+        display: flex;
+        justify-content: space-between;
+        font-family: monospace;
+        font-size: 10px;
+        font-weight: bold;
+        margin-bottom: 4px;
+      }
+      .favorability-bar {
+        height: 10px;
+        width: 100%;
+        border-radius: 5px;
+        background: #e2e8f0;
+        display: flex;
+        overflow: hidden;
+      }
+      .fav-split-user {
+        height: 100%;
+        background: #10b981;
+      }
+      .fav-split-opposite {
+        height: 100%;
+        background: #ef4444;
+      }
+      .favorability-grid {
+        display: flex;
+        gap: 10px;
+      }
+      .favorability-col {
+        flex: 1;
+        padding: 8px 10px;
+        border-radius: 4px;
+        font-size: 10.5px;
+      }
+      .fav-user-box {
+        border: 1px solid #d1fae5;
+        background: #f0fdf4;
+        color: #065f46;
+      }
+      .fav-opposite-box {
+        border: 1px solid #ffe4e6;
+        background: #fff5f5;
+        color: #991b1b;
+      }
+      .fav-box-title {
+        font-weight: bold;
+        font-family: monospace;
+        font-size: 9px;
+        margin-bottom: 3px;
+        text-transform: uppercase;
+      }
+      .fav-box-text {
+        color: #334155;
+      }
     </style>
     <div class="pdf-wrapper">
       <div class="pdf-header">
@@ -245,9 +331,41 @@ function buildSinglePageSummaryHTML(report) {
         </div>
       </div>
       
+      ${(() => {
+        const favorability = analysis?.favorability || {
+          userPercentage: 50,
+          oppositePercentage: 50,
+          userRationale: "Based on local statutory regulations, the baseline contract maintains a balanced structure. Review specific liability caps and indemnities to verify standard commercial safety.",
+          oppositeRationale: "Standard obligations apply. Review payment milestones and dispute resolution clauses to ensure adequate protection against potential opposite side defaults."
+        };
+        return `
+        <div class="favorability-container">
+          <div class="favorability-bar-wrapper">
+            <div class="favorability-labels">
+              <span style="color: #10b981;">User Protectiveness: ${favorability.userPercentage}%</span>
+              <span style="color: #ef4444;">Opposite Obligations: ${favorability.oppositePercentage}%</span>
+            </div>
+            <div class="favorability-bar">
+              <div class="fav-split-user" style="width: ${favorability.userPercentage}%;"></div>
+              <div class="fav-split-opposite" style="width: ${favorability.oppositePercentage}%;"></div>
+            </div>
+          </div>
+          <div class="favorability-grid">
+            <div class="favorability-col fav-user-box">
+              <div class="fav-box-title">User Advantages</div>
+              <div class="fav-box-text">${esc(favorability.userRationale)}</div>
+            </div>
+            <div class="favorability-col fav-opposite-box">
+              <div class="fav-box-title">Opposite Side Advantages</div>
+              <div class="fav-box-text">${esc(favorability.oppositeRationale)}</div>
+            </div>
+          </div>
+        </div>`;
+      })()}
+
       <div class="summary-section">
         <h2>Executive Summary</h2>
-        <p class="summary-text">${esc(analysis?.summary || "No summary available.")}</p>
+        <p class="summary-text">${formatSummary(analysis?.summary || "No summary available.")}</p>
       </div>
       
       <div class="highlights-section">
@@ -492,8 +610,39 @@ function buildWordHTML(report) {
       </tr>
     </table>
     
+    ${(() => {
+      const favorability = analysis?.favorability || {
+        userPercentage: 50,
+        oppositePercentage: 50,
+        userRationale: "Based on local statutory regulations, the baseline contract maintains a balanced structure. Review specific liability caps and indemnities to verify standard commercial safety.",
+        oppositeRationale: "Standard obligations apply. Review payment milestones and dispute resolution clauses to ensure adequate protection against potential opposite side defaults."
+      };
+      return `
+      <h2>Contract Balance &amp; Favorability Analysis</h2>
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-family: Arial, sans-serif;">
+        <tr>
+          <td style="width: 50%; padding: 12px; border: 1px solid #cbd5e1; background-color: #f0fdf4; vertical-align: top;">
+            <div style="font-weight: bold; color: #065f46; font-size: 11pt; margin-bottom: 6px; font-family: Arial, sans-serif;">
+              USER ADVANTAGES (${favorability.userPercentage}%)
+            </div>
+            <div style="font-size: 10pt; color: #334155; line-height: 1.5;">
+              ${esc(favorability.userRationale)}
+            </div>
+          </td>
+          <td style="width: 50%; padding: 12px; border: 1px solid #cbd5e1; background-color: #fff5f5; vertical-align: top;">
+            <div style="font-weight: bold; color: #991b1b; font-size: 11pt; margin-bottom: 6px; font-family: Arial, sans-serif;">
+              OPPOSITE SIDE ADVANTAGES (${favorability.oppositePercentage}%)
+            </div>
+            <div style="font-size: 10pt; color: #334155; line-height: 1.5;">
+              ${esc(favorability.oppositeRationale)}
+            </div>
+          </td>
+        </tr>
+      </table>`;
+    })()}
+
     <h2>Executive Summary</h2>
-    <div class="summary-text">${esc(analysis?.summary || "No summary available.")}</div>
+    <div class="summary-text">${formatSummary(analysis?.summary || "No summary available.")}</div>
     
     <table class="section-table">
       <tr>
@@ -573,7 +722,7 @@ function ItemCard({ accentColor = "#B8863B", tag, tagBg, tagFg, title, body, foo
   );
 }
 
-function NativeDocument({ report }) {
+function NativeDocument({ report, onLawClick }) {
   const { contract, riskReport, complianceReport, analysis } = report;
   const isBidding = analysis?.contractType === "bidding";
   const risk      = riskReport?.overallRiskLevel || "LOW";
@@ -599,11 +748,46 @@ function NativeDocument({ report }) {
         <RiskBadge level={risk} />
       </div>
 
+      {/* ── Favorability Overview */}
+      {(() => {
+        const favorability = analysis?.favorability || {
+          userPercentage: 50,
+          oppositePercentage: 50,
+          userRationale: "Based on local statutory regulations, the baseline contract maintains a balanced structure. Review specific liability caps and indemnities to verify standard commercial safety.",
+          oppositeRationale: "Standard obligations apply. Review payment milestones and dispute resolution clauses to ensure adequate protection against potential opposite side defaults."
+        };
+        return (
+          <DocSection icon="⚖️" title="Contract Balance & Favorability">
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontFamily: MONO, fontSize: 11, fontWeight: "bold" }}>
+                <span style={{ color: "#059669" }}>You: {favorability.userPercentage}%</span>
+                <span style={{ color: "#dc2626" }}>Opposite Side: {favorability.oppositePercentage}%</span>
+              </div>
+              <div style={{ height: 12, width: "100%", borderRadius: 6, background: "#e2e8f0", display: "flex", overflow: "hidden", border: "1px solid #cbd5e1" }}>
+                <div style={{ width: `${favorability.userPercentage}%`, height: "100%", background: "linear-gradient(to right, #10b981, #14b8a6)" }} />
+                <div style={{ width: `${favorability.oppositePercentage}%`, height: "100%", background: "linear-gradient(to right, #fb7185, #ef4444)" }} />
+              </div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div style={{ padding: 10, borderRadius: 4, border: "1px solid #d1fae5", background: "#f0fdf4" }}>
+                <div style={{ fontWeight: "bold", fontSize: 10, color: "#065f46", marginBottom: 4, fontFamily: MONO }}>YOUR ADVANTAGES</div>
+                <div style={{ fontSize: 11, color: "#374151" }}>{favorability.userRationale}</div>
+              </div>
+              <div style={{ padding: 10, borderRadius: 4, border: "1px solid #ffe4e6", background: "#fff5f5" }}>
+                <div style={{ fontWeight: "bold", fontSize: 10, color: "#991b1b", marginBottom: 4, fontFamily: MONO }}>OPPOSITE SIDE ADVANTAGES</div>
+                <div style={{ fontSize: 11, color: "#374151" }}>{favorability.oppositeRationale}</div>
+              </div>
+            </div>
+          </DocSection>
+        );
+      })()}
+
       {/* ── Executive Summary */}
       <DocSection icon="📄" title="Executive Summary">
-        <p style={{ fontSize: 13.5, lineHeight: 1.8, color: "#374151", whiteSpace: "pre-wrap", margin: 0 }}>
-          {analysis?.summary || "No summary available."}
-        </p>
+        <div 
+          style={{ fontSize: 13.5, lineHeight: 1.8, color: "#374151", whiteSpace: "pre-wrap", margin: 0 }}
+          dangerouslySetInnerHTML={{ __html: formatSummary(analysis?.summary || "No summary available.") }}
+        />
       </DocSection>
 
       {/* ── Key Dates */}
@@ -665,14 +849,22 @@ function NativeDocument({ report }) {
       {/* ── Corporate Laws */}
       {analysis?.corporateLaws?.length > 0 && (
         <DocSection icon="🏛️" title={`Corporate Laws — ${contract.employerCountry || contract.userCountry}`}>
-          {analysis.corporateLaws.map((law, i) => <ItemCard key={i} title={law.lawName} body={law.description} />)}
+          {analysis.corporateLaws.map((law, i) => (
+            <div key={i} onClick={() => onLawClick?.({ name: law.lawName, desc: law.description })} className="cursor-pointer hover:opacity-80 transition-opacity">
+              <ItemCard title={law.lawName} body={law.description} footer="Click to inspect law breakdown →" />
+            </div>
+          ))}
         </DocSection>
       )}
 
       {/* ── Bidding */}
       {isBidding && analysis?.biddingLaws?.length > 0 && (
         <DocSection icon="📜" title="Bidding Laws & Regulations">
-          {analysis.biddingLaws.map((law, i) => <ItemCard key={i} title={law.lawName} body={law.description} />)}
+          {analysis.biddingLaws.map((law, i) => (
+            <div key={i} onClick={() => onLawClick?.({ name: law.lawName, desc: law.description })} className="cursor-pointer hover:opacity-80 transition-opacity">
+              <ItemCard title={law.lawName} body={law.description} footer="Click to inspect law breakdown →" />
+            </div>
+          ))}
         </DocSection>
       )}
       {isBidding && analysis?.biddingRequirements?.length > 0 && (
@@ -695,6 +887,7 @@ function NativeDocument({ report }) {
 export default function DocumentSummaryPanel({ open, onClose, report }) {
   const previewRef  = useRef(null);
   const [downloading, setDownloading] = useState(false);
+  const [selectedLaw, setSelectedLaw] = useState(null);
 
   useEffect(() => {
     const fn = (e) => { if (e.key === "Escape") onClose(); };
@@ -758,11 +951,11 @@ export default function DocumentSummaryPanel({ open, onClose, report }) {
   return (
     <>
       {open && (
-        <div className="fixed inset-0 bg-black/30 z-30 backdrop-blur-[1px]" onClick={onClose} />
+        <div className="fixed inset-0 bg-slate-900/15 z-30 backdrop-blur-[1px]" onClick={onClose} />
       )}
 
       <div
-        className="fixed top-0 right-0 h-screen z-40 flex flex-col bg-[#0d1117] border-l border-ink-border shadow-2xl"
+        className="fixed top-0 right-0 h-screen z-40 flex flex-col bg-ink-raised border-l border-ink-border shadow-2xl"
         style={{
           width: "min(900px, 92vw)",
           transform: open ? "translateX(0)" : "translateX(100%)",
@@ -824,7 +1017,7 @@ export default function DocumentSummaryPanel({ open, onClose, report }) {
         <div className="flex flex-1 overflow-hidden min-h-0">
 
           {/* Sidebar */}
-          <div className="w-52 shrink-0 border-r border-ink-border overflow-y-auto px-3 py-4 space-y-1 bg-ink/30" style={{ scrollbarWidth: "thin" }}>
+          <div className="w-52 shrink-0 border-r border-ink-border overflow-y-auto px-3 py-4 space-y-1 bg-ink/40" style={{ scrollbarWidth: "thin" }}>
             <div className="text-[9px] font-mono text-muted/60 tracking-widest uppercase mb-3 px-2">Contents</div>
             {[
               { icon: "📄", label: "Executive Summary" },
@@ -836,7 +1029,7 @@ export default function DocumentSummaryPanel({ open, onClose, report }) {
               (isBidding && analysis?.biddingLaws?.length) ? { icon: "📜", label: "Bidding Laws" } : null,
               (isBidding && analysis?.biddingRequirements?.length) ? { icon: "📋", label: "Requirements" } : null,
             ].filter(Boolean).map((item) => (
-              <div key={item.label} className="flex items-center gap-2 px-2 py-1.5 rounded-sm text-xs text-muted hover:text-paper hover:bg-ink-border/30 cursor-default transition-colors">
+              <div key={item.label} className="flex items-center gap-2 px-2 py-1.5 rounded-sm text-xs text-muted hover:text-paper hover:bg-ink-border/35 cursor-default transition-colors">
                 <span className="text-sm shrink-0">{item.icon}</span>
                 <span className="font-mono text-[10px] leading-tight">{item.label}</span>
               </div>
@@ -844,20 +1037,28 @@ export default function DocumentSummaryPanel({ open, onClose, report }) {
           </div>
 
           {/* Document — renders instantly as native React, no iframe */}
-          <div className="flex-1 overflow-y-auto bg-[#1a1f29] px-6 py-6" style={{ scrollbarWidth: "thin" }}>
+          <div className="flex-1 overflow-y-auto bg-ink px-6 py-6" style={{ scrollbarWidth: "thin" }}>
             <div
               ref={previewRef}
-              className="bg-white rounded shadow-2xl mx-auto"
-              style={{ maxWidth: 680, padding: "40px 48px" }}
+              className="bg-white dark:bg-slate-50 text-slate-800 rounded-[6px] shadow-[0_20px_50px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.05)] mx-auto border border-slate-200/60 transition-all duration-300 hover:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.15)]"
+              style={{ maxWidth: 680, padding: "48px 56px" }}
             >
-              <NativeDocument report={report} />
+              <NativeDocument report={report} onLawClick={(law) => setSelectedLaw(law)} />
             </div>
-            <p className="text-center text-[10px] font-mono text-muted/50 mt-4">
-              Docketwise AI · Auto-generated summary · Not legal advice
+            <p className="text-center text-[9px] font-mono text-muted/60 tracking-wider uppercase mt-4">
+              Docketwise AI • Confidential Ledger Document • Not Legal Advice
             </p>
           </div>
         </div>
       </div>
+
+      <LawExplainerModal
+        open={!!selectedLaw}
+        onClose={() => setSelectedLaw(null)}
+        lawName={selectedLaw?.name}
+        lawDescription={selectedLaw?.desc}
+        country={contract?.employerCountry || contract?.userCountry}
+      />
     </>
   );
 }

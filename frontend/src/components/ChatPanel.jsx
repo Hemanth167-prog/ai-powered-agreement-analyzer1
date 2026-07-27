@@ -40,7 +40,7 @@ function formatTime(dateStr) {
   return d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
 }
 
-export default function ChatPanel({ contractId }) {
+export default function ChatPanel({ contractId, presetQuery, onQueryCleared }) {
   const [history, setHistory]     = useState([]);
   const [message, setMessage]     = useState("");
   const [sending, setSending]     = useState(false);
@@ -48,6 +48,15 @@ export default function ChatPanel({ contractId }) {
   const [hoveredId, setHoveredId] = useState(null);  // _id of hovered message
   const bottomRef = useRef(null);
   const inputRef  = useRef(null);
+
+  useEffect(() => {
+    if (presetQuery) {
+      setMessage(presetQuery);
+      inputRef.current?.focus();
+      inputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (onQueryCleared) onQueryCleared();
+    }
+  }, [presetQuery, onQueryCleared]);
 
   const loadHistory = useCallback(async () => {
     try {
@@ -111,8 +120,8 @@ export default function ChatPanel({ contractId }) {
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-ink-border shrink-0">
           <div>
-            <h3 className="font-display text-base text-paper">Ask about this contract</h3>
-            <p className="text-[11px] text-muted font-mono mt-0.5">AI-powered legal analysis assistant</p>
+            <h3 className="font-display text-base text-paper">Contract Laws & Regulations</h3>
+            <p className="text-[11px] text-muted font-mono mt-0.5">AI assistant focused on statutory laws & compliance</p>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -126,10 +135,10 @@ export default function ChatPanel({ contractId }) {
             <div className="flex flex-col items-center justify-center h-full text-center gap-3">
               <div className="text-3xl">⚖️</div>
               <p className="text-muted text-sm max-w-xs">
-                Ask about clauses, obligations, termination terms, or any legal detail in this contract.
+                Ask about statutory laws, regulations, and legal compliance frameworks impacting this contract.
               </p>
               <div className="flex flex-wrap gap-2 justify-center mt-2">
-                {["What are the termination terms?", "What are my obligations?", "Any compliance risks?"].map((q) => (
+                {["What statutory laws apply?", "Are labor laws respected?", "What compliance acts govern this?"].map((q) => (
                   <button
                     key={q}
                     onClick={() => { setMessage(q); inputRef.current?.focus(); }}
@@ -226,7 +235,7 @@ export default function ChatPanel({ contractId }) {
           <input
             ref={inputRef}
             className="input-field text-sm"
-            placeholder="Ask a legal question about this contract…"
+            placeholder="Ask about laws and regulations governing this contract…"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             disabled={sending}

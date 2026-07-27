@@ -53,7 +53,7 @@ export default function UsersPieChart({ activeCount = 0, totalCount = 0 }) {
   const offlineStrokeOfs = circ * 0.25 - activeDash;       // after active
 
   const activeColor  = hovered === "active"  ? "#34d399" : "#27ae60";
-  const offlineColor = hovered === "offline" ? "#9ca3af" : "#374151";
+  const offlineColor = hovered === "offline" ? "#94a3b8" : "#cbd5e1";
   const activeStrokeW  = hovered === "active"  ? sw + 5 : sw;
   const offlineStrokeW = hovered === "offline" ? sw + 5 : sw;
 
@@ -70,7 +70,7 @@ export default function UsersPieChart({ activeCount = 0, totalCount = 0 }) {
           style={{ filter: "drop-shadow(0 0 24px rgba(39,174,96,0.12))" }}
         >
           {/* Background track */}
-          <circle cx={cx} cy={cy} r={r} fill="none" stroke="#1a2035" strokeWidth={sw} />
+          <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--color-ink-border)" strokeWidth={sw} />
 
           {/* Offline segment (drawn first so active is on top) */}
           {offlineDash > 0.5 && (
@@ -106,14 +106,14 @@ export default function UsersPieChart({ activeCount = 0, totalCount = 0 }) {
 
           {/* Empty state ring */}
           {totalCount === 0 && (
-            <circle cx={cx} cy={cy} r={r} fill="none" stroke="#2a313d" strokeWidth={sw} strokeDasharray="6 4" />
+            <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--color-muted)" strokeWidth={sw} strokeDasharray="6 4" />
           )}
 
           {/* Center total label */}
           <text
             x={cx} y={cy - 12}
             textAnchor="middle"
-            fill={hovered === "active" ? "#34d399" : hovered === "offline" ? "#9ca3af" : "#f3f0e8"}
+            fill={hovered === "active" ? "#27ae60" : hovered === "offline" ? "#64748B" : "var(--color-paper)"}
             fontSize="30"
             fontWeight="700"
             fontFamily="'Source Serif 4', serif"
@@ -121,10 +121,10 @@ export default function UsersPieChart({ activeCount = 0, totalCount = 0 }) {
           >
             {hovered === "active" ? activeCount : hovered === "offline" ? offlineCount : totalCount}
           </text>
-          <text x={cx} y={cy + 8} textAnchor="middle" fill="#8d93a0" fontSize="7.5" fontFamily="'IBM Plex Mono', monospace" letterSpacing="2">
+          <text x={cx} y={cy + 8} textAnchor="middle" fill="var(--color-muted)" fontSize="7.5" fontFamily="'IBM Plex Mono', monospace" letterSpacing="2">
             {hovered === "active" ? "ACTIVE" : hovered === "offline" ? "OFFLINE" : "TOTAL"}
           </text>
-          <text x={cx} y={cy + 21} textAnchor="middle" fill="#8d93a0" fontSize="7.5" fontFamily="'IBM Plex Mono', monospace" letterSpacing="2">
+          <text x={cx} y={cy + 21} textAnchor="middle" fill="var(--color-muted)" fontSize="7.5" fontFamily="'IBM Plex Mono', monospace" letterSpacing="2">
             {hovered === "active" ? `${activePercent}%` : hovered === "offline" ? `${offlinePercent}%` : "USERS"}
           </text>
         </svg>
@@ -132,7 +132,7 @@ export default function UsersPieChart({ activeCount = 0, totalCount = 0 }) {
         {/* Hover tooltip popup */}
         {hovered === "active" && (
           <div className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 pointer-events-none z-20">
-            <div className="bg-ink border border-[#27ae60]/40 rounded px-3 py-2 shadow-2xl text-xs font-mono whitespace-nowrap">
+            <div className="card px-3 py-2 shadow-2xl text-xs font-mono whitespace-nowrap border-[#27ae60]/45">
               <div className="text-[#27ae60] font-bold text-sm">{activeCount} Online</div>
               <div className="text-muted mt-0.5">{activePercent}% of total</div>
               <div className="text-muted">Active ≤ 15s ago</div>
@@ -141,8 +141,8 @@ export default function UsersPieChart({ activeCount = 0, totalCount = 0 }) {
         )}
         {hovered === "offline" && (
           <div className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 pointer-events-none z-20">
-            <div className="bg-ink border border-gray-600/40 rounded px-3 py-2 shadow-2xl text-xs font-mono whitespace-nowrap">
-              <div className="text-gray-400 font-bold text-sm">{offlineCount} Offline</div>
+            <div className="card px-3 py-2 shadow-2xl text-xs font-mono whitespace-nowrap">
+              <div className="text-paper opacity-80 font-bold text-sm">{offlineCount} Offline</div>
               <div className="text-muted mt-0.5">{offlinePercent}% of total</div>
               <div className="text-muted">No heartbeat &gt; 15s</div>
             </div>
@@ -173,11 +173,11 @@ export default function UsersPieChart({ activeCount = 0, totalCount = 0 }) {
           onMouseLeave={() => setHovered(null)}
         >
           <span
-            className="h-2.5 w-2.5 rounded-full bg-gray-600 transition-transform group-hover:scale-125"
+            className="h-2.5 w-2.5 rounded-full bg-gray-400 transition-transform group-hover:scale-125"
           />
           <span className="text-xs font-mono text-muted group-hover:text-paper transition-colors">
             Offline{" "}
-            <span className="text-gray-400 font-bold">{offlineCount}</span>
+            <span className="text-slate-500 font-bold">{offlineCount}</span>
           </span>
         </button>
       </div>
