@@ -70,7 +70,7 @@ exports.chatAnswer = async (req, res) => {
     const prompt = `You are a strict legal assistant specializing exclusively in statutory laws and regulations impacting contracts.
 Here is the text of the contract:
 """
-${contractText.slice(0, 15000) || "[No text extracted from this contract]"}
+${contractText || "[No text extracted from this contract]"}
 """
 
 User Question: "${question}"

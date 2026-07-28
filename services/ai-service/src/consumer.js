@@ -308,7 +308,7 @@ async function handleAnalysisJob(job) {
   if (!parsed) {
     prompt = buildPrompt({ text, userCountry, employerCountry, clientCountry, legalRepository, contractType });
     try {
-      const { text: modelText, raw } = await callGemini(prompt, image);
+      const { text: modelText, raw } = await callGemini(prompt, image, 1, { temperature: 0.1, responseMimeType: "application/json" });
       parsed = parseModelJson(modelText);
       parsed.__raw = raw;
     } catch (err) {

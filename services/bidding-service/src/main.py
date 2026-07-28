@@ -50,10 +50,10 @@ Jurisdictions:
 - Client country: {client_country or "N/A"}
 
 CRITICAL EXTRACTION REQUIREMENTS:
-1. PINPOINT EVERY LAW: Find, identify, extract, and list EVERY single law, act, regulation, statutory provision, code, governing law, corporate law, or legal repository rule of {company_country} mentioned, referenced, or applicable in the bidding contract/tender. Ensure that all laws and regulations present in the contract are extracted completely.
+1. PINPOINT EVERY LAW EXHAUSTIVELY: Find, identify, extract, and list EVERY single law, act, regulation, statutory provision, code, governing law, corporate law, or legal repository rule of {company_country} mentioned, referenced, or applicable in the bidding contract/tender. Under no circumstances should any law/regulation present in the contract be left out. Do not summarize, skip, or group laws. Every single law must have its own dedicated item in the output array.
 2. PINPOINT EVERY DATE: Find, extract, and list EVERY single date, deadline, validity period, payment due date, bid submission deadline, tender closing date, bid opening date, pre-bid meeting date, clarification deadline, or project timeline milestone.
-3. EXTRACT ALL RISKS & COMPLIANCE ISSUES EXHAUSTIVELY: Audit the contract text comprehensively. You MUST extract every single risk involved (low, medium, or high severity) and identify every compliance issue or gap. Clearly describe the risks and compliance requirements to inform the user completely.
-4. EXTRACT ALL CLAUSES: Extract and detail every single clause (e.g., Termination, IP, Payment, Governing Law, Liabilities). All clauses involved must be informed to the user.
+3. EXTRACT ALL RISKS & COMPLIANCE ISSUES EXHAUSTIVELY: Audit the contract text comprehensively. You MUST extract every single risk involved (low, medium, or high severity) and identify every compliance issue or gap. No potential risk or compliance discrepancy found in the text may be ignored or omitted. Clearly describe the risks and compliance requirements to inform the user completely.
+4. EXTRACT ALL CLAUSES EXHAUSTIVELY without grouping or omission: You must find, extract, and detail EVERY single clause and section present in the contract. Do not omit any clause. Do not group multiple distinct clauses under a single item (for example, do not group "Governing Law", "Severability", and "Entire Agreement" into a single "Miscellaneous" or "General" item—they must be extracted as separate, individual items in the clauses array). To avoid running out of output tokens, write concise text summaries/quotes, but ensure that 100% of the clauses are represented in the array.
 5. ASSESS FAVORABILITY: Evaluate the overall balance of this bidding contract/tender. Estimate the favorability score (as a percentage out of 100) for the user/bidder and for the opposite side (issuer/client). The sum of both percentages must equal exactly 100. Provide a detailed, professional legal rationale for each side's score.
 
 Return ONLY a valid JSON object — no markdown fences (no ```json), no commentary:
@@ -84,7 +84,7 @@ Return ONLY a valid JSON object — no markdown fences (no ```json), no commenta
 
 Contract/Bidding Document text:
 \"\"\"
-{text[:15000]}
+{text}
 \"\"\"
 """
 

@@ -2,7 +2,7 @@ const axios = require("axios");
 
 // Calls Gemini API. Only ever invoked from the backend (ai-service) - the frontend
 // never talks to Gemini directly, per requirements.
-async function callGemini(prompt, image = null, maxRetries = 1) {
+async function callGemini(prompt, image = null, maxRetries = 1, options = {}) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY is not configured");
@@ -21,12 +21,19 @@ async function callGemini(prompt, image = null, maxRetries = 1) {
   }
   parts.push({ text: prompt });
 
+  const generationConfig = {
+    temperature: options.temperature !== undefined ? options.temperature : 0.1,
+  };
+  if (options.responseMimeType) {
+    generationConfig.responseMimeType = options.responseMimeType;
+  }
+
   let attempt = 0;
   while (true) {
     try {
       const response = await axios.post(
         url,
-        { contents: [{ parts }] },
+        { contents: [{ parts }], generationConfig },
         { headers: { "Content-Type": "application/json" }, timeout: 60000 }
       );
 

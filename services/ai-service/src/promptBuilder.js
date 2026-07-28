@@ -24,10 +24,10 @@ IMPORTANT — LANGUAGE HANDLING:
 - Never refuse or skip analysis because of the language. Always process it.
 
 CRITICAL INSTRUCTIONS FOR HIGH QUALITY AND DETAIL:
-1. PINPOINT EVERY LAW: Find, identify, extract, and list EVERY single law, act, regulation, statutory provision, code, governing law, corporate law, or legal repository rule mentioned, referenced, or applicable in the contract. Under no circumstances should any law/regulation present in the contract be left out. For each, describe exactly how it applies to the contract.
+1. PINPOINT EVERY LAW EXHAUSTIVELY: Find, identify, extract, and list EVERY single law, act, regulation, statutory provision, code, governing law, corporate law, or legal repository rule mentioned, referenced, or applicable in the contract. Under no circumstances should any law/regulation present in the contract be left out. Do not summarize, skip, or group laws. Every single law must have its own dedicated item in the output array. For each, describe exactly how it applies to the contract.
 2. PINPOINT EVERY DATE: Find, extract, and list EVERY single date, deadline, grace period, milestone, execution date, effective date, termination notice period, payment due date, or timeline.
-3. EXTRACT ALL RISKS & COMPLIANCE GAPS EXHAUSTIVELY: Perform a comprehensive, strict audit of the contract text. You MUST extract every single risk involved (low, medium, or high severity), and identify every compliance obligation or gap. Detail why it is a risk/compliance issue and explain how the user can comply or mitigate it. Inform the user completely about these findings.
-4. EXTRACT ALL CLAUSES: Extract and detail every single clause present in the contract (e.g. Termination, Liability, IP, Payment, Governing Law). None of the clauses must be hidden or ignored; all of them must be clearly informed to the user.
+3. EXTRACT ALL RISKS & COMPLIANCE GAPS EXHAUSTIVELY: Perform a comprehensive, strict audit of the contract text. You MUST extract every single risk involved (low, medium, or high severity), and identify every compliance obligation or gap. No potential risk or compliance discrepancy found in the text may be ignored or omitted. Detail why it is a risk/compliance issue and explain how the user can comply or mitigate it. Inform the user completely about these findings.
+4. EXTRACT ALL CLAUSES EXHAUSTIVELY without grouping or omission: You must find, extract, and detail EVERY single clause and section present in the contract. Do not omit any clause. Do not group multiple distinct clauses under a single item (for example, do not group "Governing Law", "Severability", and "Entire Agreement" into a single "Miscellaneous" or "General" item—they must be extracted as separate, individual items in the clauses array). To avoid running out of output tokens, write concise text summaries/quotes, but ensure that 100% of the clauses are represented in the array.
 5. ASSESS FAVORABILITY: Evaluate the contract's overall balance. Assign an integer percentage score (0-100) indicating how favorable the contract is to the user (employee, contractor, or bidding party) and how favorable it is to the opposite side (employer, client, or issuer). The sum of both percentages must equal exactly 100. Provide a detailed legal rationale for both parties.
 
 Analyse the following contract text strictly under: ${legalRepository}.
@@ -65,7 +65,7 @@ Note: biddingDeadlines and bidOpeningDate can also be used if standard contracts
 
 Contract text:
 """
-${text.slice(0, 15000)}
+${text}
 """`;
 }
 

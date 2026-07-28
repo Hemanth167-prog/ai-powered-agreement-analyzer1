@@ -202,6 +202,7 @@ services:
       PORT: 4009
       MONGO_URI: mongodb://mongo:27017/project
       DOCKER_ENV: "true"
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-1.5-flash}
     depends_on:
       mongo:
