@@ -107,7 +107,7 @@ Contract/Bidding Document text:
         response = None
         while True:
             try:
-                response = requests.post(url, json=payload, headers=headers, timeout=90)
+                response = requests.post(url, json=payload, headers=headers, timeout=300)
                 response.raise_for_status()
                 break
             except requests.exceptions.RequestException as err:

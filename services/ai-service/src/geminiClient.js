@@ -34,7 +34,7 @@ async function callGemini(prompt, image = null, maxRetries = 1, options = {}) {
       const response = await axios.post(
         url,
         { contents: [{ parts }], generationConfig },
-        { headers: { "Content-Type": "application/json" }, timeout: 60000 }
+        { headers: { "Content-Type": "application/json" }, timeout: 300000 }
       );
 
       const text = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
