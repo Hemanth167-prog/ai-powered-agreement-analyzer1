@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const User = require("./src/models/User");
 
-const uri = process.env.MONGO_URI || "mongodb://localhost:27017/project";
+const uri = process.env.MONGO_URI || "mongodb://localhost:27017/project1";
 
 mongoose.connect(uri)
   .then(async () => {

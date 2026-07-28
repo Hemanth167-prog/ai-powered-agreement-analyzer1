@@ -7,7 +7,7 @@ from pymongo import MongoClient
 app = Flask(__name__)
 
 # Connect to MongoDB
-mongo_uri = os.environ.get("MONGO_URI", "mongodb://localhost:27017/project")
+mongo_uri = os.environ.get("MONGO_URI", "mongodb://localhost:27017/project1")
 if os.environ.get("DOCKER_ENV") or os.path.exists("/.dockerenv"):
     mongo_uri = mongo_uri.replace("localhost:27017", "mongo:27017")
 

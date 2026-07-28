@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const uri = "mongodb://localhost:27017/project";
+const uri = "mongodb://localhost:27017/project1";
 
 async function check() {
   await mongoose.connect(uri);
@@ -23,7 +23,7 @@ async function check() {
 
   const collections = await db.listCollections().toArray();
   
-  console.log("\nCollections found in 'project' database:");
+  console.log("\nCollections found in 'project1' database:");
   for (const col of collections.sort((a, b) => a.name.localeCompare(b.name))) {
     const count = await db.collection(col.name).countDocuments();
     console.log(`  - "${col.name}" collection: ${count} documents`);

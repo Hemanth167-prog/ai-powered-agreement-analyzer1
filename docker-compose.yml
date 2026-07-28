@@ -67,7 +67,7 @@ services:
     environment:
       <<: *common-env
       PORT: 4001
-      MONGO_URI: mongodb://mongo:27017/project
+      MONGO_URI: mongodb://mongo:27017/project1
     depends_on:
       mongo:
         condition: service_healthy
@@ -81,7 +81,7 @@ services:
     environment:
       <<: *common-env
       PORT: 4002
-      MONGO_URI: mongodb://mongo:27017/project
+      MONGO_URI: mongodb://mongo:27017/project1
     volumes:
       - contract_uploads:/app/uploads
     depends_on:
@@ -99,7 +99,7 @@ services:
     environment:
       <<: *common-env
       PORT: 4003
-      MONGO_URI: mongodb://mongo:27017/project
+      MONGO_URI: mongodb://mongo:27017/project1
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-1.5-flash}
     depends_on:
@@ -117,7 +117,7 @@ services:
     environment:
       <<: *common-env
       PORT: 4004
-      MONGO_URI: mongodb://mongo:27017/project
+      MONGO_URI: mongodb://mongo:27017/project1
     depends_on:
       mongo:
         condition: service_healthy
@@ -131,7 +131,7 @@ services:
     environment:
       <<: *common-env
       PORT: 4005
-      MONGO_URI: mongodb://mongo:27017/project
+      MONGO_URI: mongodb://mongo:27017/project1
     depends_on:
       mongo:
         condition: service_healthy
@@ -145,7 +145,7 @@ services:
     environment:
       <<: *common-env
       PORT: 4006
-      MONGO_URI: mongodb://mongo:27017/project
+      MONGO_URI: mongodb://mongo:27017/project1
     depends_on:
       mongo:
         condition: service_healthy
@@ -165,7 +165,7 @@ services:
     environment:
       <<: *common-env
       PORT: 4007
-      MONGO_URI: mongodb://mongo:27017/project
+      MONGO_URI: mongodb://mongo:27017/project1
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_USER: ${SMTP_USER}
@@ -184,7 +184,7 @@ services:
     environment:
       <<: *common-env
       PORT: 4008
-      MONGO_URI: mongodb://mongo:27017/project
+      MONGO_URI: mongodb://mongo:27017/project1
     depends_on:
       mongo:
         condition: service_healthy
@@ -200,7 +200,7 @@ services:
     environment:
       <<: *common-env
       PORT: 4009
-      MONGO_URI: mongodb://mongo:27017/project
+      MONGO_URI: mongodb://mongo:27017/project1
       DOCKER_ENV: "true"
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-1.5-flash}

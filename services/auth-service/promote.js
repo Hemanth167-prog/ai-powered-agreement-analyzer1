@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const User = require("./src/models/User");
 
 // Connect to the local MongoDB database
-const uri = process.env.MONGO_URI || "mongodb://localhost:27017/project";
+const uri = process.env.MONGO_URI || "mongodb://localhost:27017/project1";
 
 mongoose.connect(uri)
   .then(async () => {
